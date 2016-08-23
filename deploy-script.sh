@@ -13,20 +13,19 @@
 #
 # Script vars. Set these up prior to running.
 #
-SITE_ROOT=~/domains/dev-9spokes.saltydev.com
+SITE_ROOT="/home/saltydev/domains/dev-9spokes.saltydev.com"
 DEFAULT_BRANCH="develop"
 HTDOCS_DIR="public_html"
 SQL_DUMPS_DIR="sql-dumps"
-REPO_DIR="repo"
+REPO_DIR="bbrepo"
 VERSIONS_DIR="versions"
 MSQL_HOST="localhost"
 MSQL_USER="saltydev"
 MYSQL_PASSWORD="JtfbVzt9BPX2iHnN"
 MSQL_DATABASE="dev_9spokes"
-VERSION_NAME=$(date "+%Y-%m-%d-%H_%M_%S")
-HTACCESS="$SITE_ROOT/.htaccess"
+VERSION_NAME=$SITE_ROOT/$VERSIONS_DIR/$(date "+%Y-%m-%d-%H_%M_%S")
+HTACCESS="$SITE_ROOT/htaccess"
 ROBOTS="$SITE_ROOT/robots.txt"
-
 # ##########################################
 # YOU SHOULDN'T HAVE TO EDIT BELOW HERE.
 # ##########################################
@@ -61,7 +60,7 @@ mkdir -p $SITE_ROOT/$SQL_DUMPS_DIR
 mysqldump -h $MYSQL_HOST -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE > $SQL_DUMPS_DIR/$MYSQL_DATABASE-$(date "+%b_%d_%Y_%H_%M_%S").sql
 
 if [ -t 1 ]; then echo -e "\e[32mMySQL dump successful\e[39m"; fi
-cd $SITE_ROOT/$SQL_DUMPS_DIR
+cd $SITE_ROOT/$REPO_DIR
 git fetch --all
 git checkout $branch
 git checkout composer.lock
@@ -80,16 +79,18 @@ fi
 
 if [ -t 1 ]; then echo -e "\e[32mPreparing to depreciate the current public_html\e[39m"; fi
 cd $SITE_ROOT
-cp -rf $REPO_DIR $VERSION_DIR/$VERSION_NAME
+cp -rf $SITE_ROOT/$REPO_DIR $VERSION_NAME
 if [ -t 1 ]; then echo -e "\e[32mCurrent public_html has been depreciated\e[39m"; fi
-rm $HTDOCS_DIR
-ln -s $VERSIONS_DIR/$VERSION_NAME $HTDOCS_DIR
-#mv public_html_new public_html
-cd $HTDOCS_DIR
+rm -rf $SITE_ROOT/$HTDOCS_DIR;
+ln -s $VERSION_NAME $SITE_ROOT/$HTDOCS_DIR
+cd $SITE_ROOT/$HTDOCS_DIR
 if [ -t 1 ]; then echo -e "\e[32mCreating symbolic link to assets directory...\e[39m"; fi
-rm -rf assets
+rm -rf $SITE_ROOT/$HTDOCS_DIR/assets
 ln -s $SITE_ROOT/assets .
 if [ -t 1 ]; then echo -e "\e[32mRefreshing database\e[39m"; fi
+
+
+cd $SITE_ROOT/$HTDOCS_DIR
 
 if [ $MODE == "full" ];
 then
@@ -101,6 +102,7 @@ if [ -t 1 ]; then echo -e "\e[32mDatabase refreshed\e[39m"; fi
 if [ -t 1 ]; then echo -e "\e[32mCleaning...\e[39m"; fi
 rm -rf composer.*
 rm -rf .git*
+rm .editorconfig
 cp $HTACCESS ./.htaccess
 cp $ROBOTS ./robots.txt
 cd $SITE_ROOT
