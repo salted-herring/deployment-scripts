@@ -101,7 +101,7 @@ if [ -t 1 ]; then echo -e "\e[32mDatabase refreshed\e[39m"; fi
 if [ -t 1 ]; then echo -e "\e[32mCleaning...\e[39m"; fi
 rm -rf composer.*
 rm -rf .git*
-cp $HTACCESS .
-cp $ROBOTS .
+cp $HTACCESS ./.htaccess
+cp $ROBOTS ./robots.txt
 cd $SITE_ROOT
 if [ -t 1 ]; then echo -e "\e[32mDeployment successful\e[39m"; fi
