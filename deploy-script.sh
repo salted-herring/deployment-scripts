@@ -66,13 +66,11 @@ mysqldump -h $MYSQL_HOST -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE > $SQL
 if [ $? -eq 0 ]; then echo -e "\e[32mMySQL dump successful\e[39m"; fi
 cd $SITE_ROOT/$REPO_DIR
 
-echo "Continue? (Yes/No) [Yes]";
+echo "Continue with pull from git? (Yes/No) [Yes]";
 read cont
 caseCont=`echo $cont | tr 'A-Z' 'a-z'`
 
-if [[ $caseCont == "yes" ]]; then 
-    continue
-else
+if [[ $caseCont != "yes" ]]; then 
     echo -e "\e[31mExiting Deployment\e[39m";
     exit
 fi
