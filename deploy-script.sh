@@ -19,8 +19,8 @@ HTDOCS_DIR="public_html"
 SQL_DUMPS_DIR="sql-dumps"
 REPO_DIR="bbrepo"
 VERSIONS_DIR="versions"
-MSQL_HOST="localhost"
-MSQL_USER="saltydev"
+MYSQL_HOST="localhost"
+MYSQL_USER="saltydev"
 MYSQL_PASSWORD="JtfbVzt9BPX2iHnN"
 MYSQL_DATABASE="dev_9spokes"
 DATABASE_VERSION=$(date "+%Y-%m-%d-%H_%M_%S")
@@ -74,7 +74,7 @@ if [ -L $SITE_ROOT/$VERSIONS_DIR/latest ]; then
     fi
     
     ln -s $previous $SITE_ROOT/$VERSIONS_DIR/previous
-    rm $SITE_ROOT/$VERSIONS_DIR/latest
+    #rm $SITE_ROOT/$VERSIONS_DIR/latest
 fi
 
 cd $SITE_ROOT
@@ -85,45 +85,44 @@ cd $SITE_ROOT
 mkdir -p $SITE_ROOT/$SQL_DUMPS_DIR
 mysqldump -h $MYSQL_HOST -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE > $SQL_DUMPS_DIR/$MYSQL_DATABASE-$DATABASE_VERSION.sql
 
-if [ -L $SQL_DUMPS_DIR/latest ]; then
-    rm $SQL_DUMPS_DIR/latest
+##
+# Create symlink to latest dump
+##
+if [ -L $SITE_ROOT/$SQL_DUMPS_DIR/latest ]; then
+    realPath=`realpath $SITE_ROOT/$SQL_DUMPS_DIR/latest`
+    ln -s $realPath $SITE_ROOT/$SQL_DUMPS_DIR/previous
+    rm $SITE_ROOT/$SQL_DUMPS_DIR/latest
 fi
 
-ln -s $SQL_DUMPS_DIR/$MYSQL_DATABASE-$DATABASE_VERSION.sql $SQL_DUMPS_DIR/latest
-
-cd $SITE_ROOT
+ln -s $SITE_ROOT/$SQL_DUMPS_DIR/$MYSQL_DATABASE-$DATABASE_VERSION.sql $SITE_ROOT/$SQL_DUMPS_DIR/latest
 
 if [ $? -eq 0 ]; then echo -e "\e[32mMySQL dump successful\e[39m"; fi
+
 cd $SITE_ROOT/$REPO_DIR
 
 
 # #############
 # Continue?
 # #############
-read -p "Continue with pull from git? (Yes/No): " cont
-caseCont=`echo $cont | tr 'A-Z' 'a-z'`
+#read -p "Continue with pull from git? (Yes/No): " cont
+#caseCont=`echo $cont | tr 'A-Z' 'a-z'`
 
-if [[ $caseCont != "yes" ]]; then 
-    echo -e "\e[31mExiting Deployment\e[39m";
-    exit
-fi
+#if [[ $caseCont != "yes" ]]; then 
+#    echo -e "\e[31mExiting Deployment\e[39m";
+#    exit
+#fi
 
 # #########
 # Git fetch
 # #########
 git fetch --all
-if [ $? -eq 0 ]; then
-    echo -e "\e[32mgit fetch successful$\e[39m";
-else
-    echo -e "\e[31mgit fetch failed$\e[39m";
-fi
 git checkout $branch
 git checkout composer.lock
 git pull origin $branch
 if [ -t 1 ]; then echo -e "\e[32mPulled from $branch branch\e[39m"; fi
 
-if [ $MODE == "full" ];
-then
+
+if [ $MODE == "full" ]; then
     echo -e "\e[32mUpdating composer... \e[39m";
     composer update;
     echo -e "\e[32mComposer updated. Now bower... \e[39m";
@@ -136,6 +135,7 @@ if [ -t 1 ]; then echo -e "\e[32mPreparing to depreciate the current public_html
 cd $SITE_ROOT
 cp -rf $SITE_ROOT/$REPO_DIR $VERSION_NAME
 
+rm $SITE_ROOT/$VERSIONS_DIR/latest
 ln -s $VERSION_NAME $SITE_ROOT/$VERSIONS_DIR/latest
 
 
@@ -147,6 +147,19 @@ if [ -t 1 ]; then echo -e "\e[32mCreating symbolic link to assets directory...\e
 rm -rf $SITE_ROOT/$HTDOCS_DIR/assets
 ln -s $ASSETS_DIR .
 if [ -t 1 ]; then echo -e "\e[32mRefreshing database\e[39m"; fi
+
+# #########################
+# Archive previous versions
+# #########################
+cd $SITE_ROOT/$VERSIONS_DIR
+
+if [ -L $SITE_ROOT/$SQL_DUMPS_DIR/previous ]; then
+    realPath=`realpath $SITE_ROOT/$SQL_DUMPS_DIR/previous`
+    dateName=part1=`dirname $realPath`
+    tar -czvf $dateName.tgz $realPath
+    rm -rf $realPath
+    ln -s $dateName.tgz $SITE_ROOT/$SQL_DUMPS_DIR/previous
+fi
 
 
 cd $SITE_ROOT/$HTDOCS_DIR
