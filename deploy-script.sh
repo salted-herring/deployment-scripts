@@ -26,6 +26,7 @@ MSQL_DATABASE="dev_9spokes"
 VERSION_NAME=$SITE_ROOT/$VERSIONS_DIR/$(date "+%Y-%m-%d-%H_%M_%S")
 HTACCESS="$SITE_ROOT/htaccess"
 ROBOTS="$SITE_ROOT/robots.txt"
+ASSETS_DIR="$SITE_ROOT/assets"
 # ##########################################
 # YOU SHOULDN'T HAVE TO EDIT BELOW HERE.
 # ##########################################
@@ -56,12 +57,35 @@ else
    printf 'Deployment branch: %s\n' "$branch"
 fi
 
+# #############
+# 1. MySQL Dump
+# #############
 mkdir -p $SITE_ROOT/$SQL_DUMPS_DIR
 mysqldump -h $MYSQL_HOST -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE > $SQL_DUMPS_DIR/$MYSQL_DATABASE-$(date "+%b_%d_%Y_%H_%M_%S").sql
 
-if [ -t 1 ]; then echo -e "\e[32mMySQL dump successful\e[39m"; fi
+if [ $? -eq 0 ]; then echo -e "\e[32mMySQL dump successful\e[39m"; fi
 cd $SITE_ROOT/$REPO_DIR
+
+echo "Continue? (Yes/No) [Yes]";
+read cont
+caseCont=`echo $cont | tr 'A-Z' 'a-z'`
+
+if [[ $caseCont == "yes" ]]; then 
+    continue
+else
+    echo -e "\e[31mExiting Deployment\e[39m";
+    exit
+fi
+
+# #########
+# Git fetch
+# #########
 git fetch --all
+if [ $? -eq 0 ]; then
+    echo -e "\e[32mgit fetch successful$\e[39m";
+else
+    echo -e "\e[31mgit fetch failed$\e[39m";
+fi
 git checkout $branch
 git checkout composer.lock
 git pull origin $branch
@@ -86,7 +110,7 @@ ln -s $VERSION_NAME $SITE_ROOT/$HTDOCS_DIR
 cd $SITE_ROOT/$HTDOCS_DIR
 if [ -t 1 ]; then echo -e "\e[32mCreating symbolic link to assets directory...\e[39m"; fi
 rm -rf $SITE_ROOT/$HTDOCS_DIR/assets
-ln -s $SITE_ROOT/assets .
+ln -s $ASSETS_DIR .
 if [ -t 1 ]; then echo -e "\e[32mRefreshing database\e[39m"; fi
 
 
@@ -100,7 +124,6 @@ else
 fi
 if [ -t 1 ]; then echo -e "\e[32mDatabase refreshed\e[39m"; fi
 if [ -t 1 ]; then echo -e "\e[32mCleaning...\e[39m"; fi
-rm -rf composer.*
 rm -rf .git*
 rm .editorconfig
 cp $HTACCESS ./.htaccess
