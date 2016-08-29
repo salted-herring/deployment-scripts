@@ -27,6 +27,8 @@ VERSION_NAME=$SITE_ROOT/$VERSIONS_DIR/$(date "+%Y-%m-%d-%H_%M_%S")
 HTACCESS="$SITE_ROOT/htaccess"
 ROBOTS="$SITE_ROOT/robots.txt"
 ASSETS_DIR="$SITE_ROOT/assets"
+
+previous=""
 # ##########################################
 # YOU SHOULDN'T HAVE TO EDIT BELOW HERE.
 # ##########################################
@@ -66,6 +68,9 @@ mysqldump -h $MYSQL_HOST -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE > $SQL
 if [ $? -eq 0 ]; then echo -e "\e[32mMySQL dump successful\e[39m"; fi
 cd $SITE_ROOT/$REPO_DIR
 
+# #############
+# Continue?
+# #############
 echo "Continue? (Yes/No) [Yes]";
 read cont
 caseCont=`echo $cont | tr 'A-Z' 'a-z'`
@@ -104,6 +109,15 @@ fi
 if [ -t 1 ]; then echo -e "\e[32mPreparing to depreciate the current public_html\e[39m"; fi
 cd $SITE_ROOT
 cp -rf $SITE_ROOT/$REPO_DIR $VERSION_NAME
+
+if [ -d $SITE_ROOT/$VERSIONS_DIR/latest ]
+    previous="echo pwd -P"
+    ln -s $SITE_ROOT/$VERSIONS_DIR/previous $previous
+fi
+
+ln -s $VERSION_NAME $SITE_ROOT/$VERSIONS_DIR/latest
+
+
 if [ -t 1 ]; then echo -e "\e[32mCurrent public_html has been depreciated\e[39m"; fi
 rm -rf $SITE_ROOT/$HTDOCS_DIR;
 ln -s $VERSION_NAME $SITE_ROOT/$HTDOCS_DIR
