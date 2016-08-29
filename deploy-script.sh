@@ -22,7 +22,8 @@ VERSIONS_DIR="versions"
 MSQL_HOST="localhost"
 MSQL_USER="saltydev"
 MYSQL_PASSWORD="JtfbVzt9BPX2iHnN"
-MSQL_DATABASE="dev_9spokes"
+MYSQL_DATABASE="dev_9spokes"
+DATABASE_VERSION=$(date "+%Y-%m-%d-%H_%M_%S")
 VERSION_NAME=$SITE_ROOT/$VERSIONS_DIR/$(date "+%Y-%m-%d-%H_%M_%S")
 HTACCESS="$SITE_ROOT/htaccess"
 ROBOTS="$SITE_ROOT/robots.txt"
@@ -59,11 +60,38 @@ else
    printf 'Deployment branch: %s\n' "$branch"
 fi
 
+# #########################################################
+# Find the latest version & link it as the previous version
+# (ensuring rolling back is straight forward)
+# #########################################################
+
+if [ -L $SITE_ROOT/$VERSIONS_DIR/latest ]; then
+    cd $SITE_ROOT/$VERSIONS_DIR/latest
+    previous=`pwd -P`
+    
+    if [ -L $SITE_ROOT/$VERSIONS_DIR/latest ]; then
+        rm $SITE_ROOT/$VERSIONS_DIR/previous
+    fi
+    
+    ln -s $previous $SITE_ROOT/$VERSIONS_DIR/previous
+    rm $SITE_ROOT/$VERSIONS_DIR/latest
+fi
+
+cd $SITE_ROOT
+
 # #############
 # 1. MySQL Dump
 # #############
 mkdir -p $SITE_ROOT/$SQL_DUMPS_DIR
-mysqldump -h $MYSQL_HOST -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE > $SQL_DUMPS_DIR/$MYSQL_DATABASE-$(date "+%b_%d_%Y_%H_%M_%S").sql
+mysqldump -h $MYSQL_HOST -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE > $SQL_DUMPS_DIR/$MYSQL_DATABASE-$DATABASE_VERSION.sql
+
+if [ -L $SQL_DUMPS_DIR/latest ]; then
+    rm $SQL_DUMPS_DIR/latest
+fi
+
+ln -s $SQL_DUMPS_DIR/$MYSQL_DATABASE-$DATABASE_VERSION.sql $SQL_DUMPS_DIR/latest
+
+cd $SITE_ROOT
 
 if [ $? -eq 0 ]; then echo -e "\e[32mMySQL dump successful\e[39m"; fi
 cd $SITE_ROOT/$REPO_DIR
@@ -72,8 +100,7 @@ cd $SITE_ROOT/$REPO_DIR
 # #############
 # Continue?
 # #############
-echo "Continue with pull from git? (Yes/No) [Yes]";
-read cont
+read -p "Continue with pull from git? (Yes/No): " cont
 caseCont=`echo $cont | tr 'A-Z' 'a-z'`
 
 if [[ $caseCont != "yes" ]]; then 
@@ -108,11 +135,6 @@ fi
 if [ -t 1 ]; then echo -e "\e[32mPreparing to depreciate the current public_html\e[39m"; fi
 cd $SITE_ROOT
 cp -rf $SITE_ROOT/$REPO_DIR $VERSION_NAME
-
-if [ -d $SITE_ROOT/$VERSIONS_DIR/latest ]
-    previous="echo pwd -P"
-    ln -s $SITE_ROOT/$VERSIONS_DIR/previous $previous
-fi
 
 ln -s $VERSION_NAME $SITE_ROOT/$VERSIONS_DIR/latest
 
