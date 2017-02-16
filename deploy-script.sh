@@ -1,4 +1,24 @@
 #!/bin/bash
+echo -en "\e[92m"
+cat << EOF
+
+
+  d888888o.           .8.          8 8888   8888888 8888888888 \`8.\`8888.      ,8'
+ .\`8888:' \`88.        .888.         8 8888         8 8888        \`8.\`8888.    ,8'
+ 8.\`8888.   Y8       :88888.        8 8888         8 8888         \`8.\`8888.  ,8'
+ \`8.\`8888.          . \`88888.       8 8888         8 8888          \`8.\`8888.,8'
+  \`8.\`8888.        .8. \`88888.      8 8888         8 8888           \`8.\`88888'
+   \`8.\`8888.      .8\`8. \`88888.     8 8888         8 8888            \`8. 8888
+    \`8.\`8888.    .8' \`8. \`88888.    8 8888         8 8888             \`8 8888
+8b   \`8.\`8888.  .8'   \`8. \`88888.   8 8888         8 8888              8 8888
+\`8b.  ;8.\`8888 .888888888. \`88888.  8 8888         8 8888              8 8888
+ \`Y8888P ,88P'.8'       \`8. \`88888. 8 888888888888 8 8888              8 8888
+
+
+EOF
+echo -e "\e[39mWelcome to the Salty deploment system."
+echo -e "\e[39m--------------------------------------"
+
 # ###########################################
 # deploy-script.sh
 # ----------------
@@ -7,7 +27,7 @@
 # 1. Backup current db.
 # 2. Checks out latest code.
 # 3. Backs up current site.
-# 4. Synchs with composer & bower
+# 4. Syncs with composer & bower
 # 5. Updates db with current state.
 # ###########################################
 
@@ -104,7 +124,14 @@ cd $SITE_ROOT
 # 1. MySQL Dump
 # #########################################################
 mkdir -p $SITE_ROOT/$SQL_DUMPS_DIR
-mysqldump -h $MYSQL_HOST -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE > $SQL_DUMPS_DIR/$MYSQL_DATABASE-$DATABASE_VERSION.sql
+if [ "$VERBOSE" = true ]
+then
+    echo -e "\e[90mStarting MySQL dump\e[39m";
+    mysqldump -v -h $MYSQL_HOST -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE > $SQL_DUMPS_DIR/$MYSQL_DATABASE-$DATABASE_VERSION.sql
+else
+    mysqldump -h $MYSQL_HOST -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE > $SQL_DUMPS_DIR/$MYSQL_DATABASE-$DATABASE_VERSION.sql
+fi
+
 
 ##
 # Create symlink to latest dump
