@@ -17,7 +17,8 @@ cat << EOF
 
 EOF
 echo -e "\e[39mWelcome to the Salty deploment system."
-echo -e "\e[39m--------------------------------------"
+echo -e "\e[39m--------------------------------------"``
+echo -e "\n"
 
 # ###########################################
 # deploy-script.sh
@@ -56,6 +57,7 @@ done
 #
 SITE_ROOT=$(pwd)
 DEFAULT_BRANCH="develop"
+DEFAULT_MODE="lite"
 HTDOCS_DIR="public_html"
 SQL_DUMPS_DIR="sql-dumps"
 REPO_DIR="repo"
@@ -75,24 +77,35 @@ previous=""
 # YOU SHOULDN'T HAVE TO EDIT BELOW HERE.
 # ##########################################
 
-echo "Which environment would you like to deploy?"
+# #########################################################
+# Choose mode & branch
+# #########################################################
+
+echo -e "Which environment would you like to deploy? \e[1m[Lite]\e[22m"
 echo "1. Lite (only file updates)"
 echo "2. Full (file, composer, and bower)"
-read userchoice
+read -p "" userchoice
 
-case $userchoice in
-1) echo "Lite mode chosen"
-    MODE="lite"
-    ;;
-2) echo "Full mode chosen"
-    MODE="full"
-    ;;
-*) echo "Default to development"
-    MODE="lite"
-    ;;
-esac
+if [[ -z "$userchoice" ]]; then
+   echo -e "\t• Lite mode chosen"
+   MODE=$DEFAULT_MODE
+else
+    case $userchoice in
+    1) echo -e "\t• Lite mode chosen"
+        MODE="lite"
+        ;;
+    2) echo -e "\t• Full mode chosen"
+        MODE="full"
+        ;;
+    *) echo -e "\t• Default to development"
+        MODE="lite"
+        ;;
+    esac
+fi
 
-read -p "Which branch should we deploy from?: [$DEFAULT_BRANCH] " branch
+echo -e "\n"
+
+read -p "Which branch should we deploy from?: \e[1m[$DEFAULT_BRANCH]\e[22m " branch
 
 if [[ -z "$branch" ]]; then
    printf '%s\n' "Deployment branch: $DEFAULT_BRANCH"
@@ -100,6 +113,8 @@ if [[ -z "$branch" ]]; then
 else
    printf 'Deployment branch: %s\n' "$branch"
 fi
+
+echo -e "\n"
 
 # #########################################################
 # Find the latest version & link it as the previous version
