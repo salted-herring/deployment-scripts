@@ -11,19 +11,39 @@
 # 5. Updates db with current state.
 # ###########################################
 
+# ###########################################
+# Arguments:
+# ----------
+# The script accepts the following arguments:
+# --v, --verbose - show all output.
+# ###########################################
+VERBOSE=false
+while test $# -gt 0
+do
+    case "$1" in
+        --verbose) VERBOSE=true
+            ;;
+        --*) echo "bad option $1"
+            ;;
+        *) echo "argument $1"
+            ;;
+    esac
+    shift
+done
+
 #
 # Script vars. Set these up prior to running.
 #
-SITE_ROOT="/home/saltydev/domains/dev-9spokes.saltydev.com"
+SITE_ROOT=$(pwd)
 DEFAULT_BRANCH="develop"
 HTDOCS_DIR="public_html"
 SQL_DUMPS_DIR="sql-dumps"
-REPO_DIR="bbrepo"
+REPO_DIR="repo"
 VERSIONS_DIR="versions"
 MYSQL_HOST="localhost"
-MYSQL_USER="saltydev"
-MYSQL_PASSWORD="JtfbVzt9BPX2iHnN"
-MYSQL_DATABASE="dev_9spokes"
+MYSQL_USER="silverstripe"
+MYSQL_PASSWORD="nU3asT52uwUb"
+MYSQL_DATABASE="ss_wildeyes"
 DATABASE_VERSION=$(date "+%Y-%m-%d-%H_%M_%S")
 VERSION_NAME=$SITE_ROOT/$VERSIONS_DIR/$(date "+%Y-%m-%d-%H_%M_%S")
 HTACCESS="$SITE_ROOT/htaccess"
@@ -69,20 +89,20 @@ fi
 if [ -L $SITE_ROOT/$VERSIONS_DIR/latest ]; then
     cd $SITE_ROOT/$VERSIONS_DIR/latest
     previous=`pwd -P`
-    
+
     if [ -L $SITE_ROOT/$VERSIONS_DIR/latest ]; then
         rm $SITE_ROOT/$VERSIONS_DIR/previous
     fi
-    
-    ln -s $previous $SITE_ROOT/$VERSIONS_DIR/previous
+
+    ln -sf $previous $SITE_ROOT/$VERSIONS_DIR/previous
     #rm $SITE_ROOT/$VERSIONS_DIR/latest
 fi
 
 cd $SITE_ROOT
 
-# #############
+# #########################################################
 # 1. MySQL Dump
-# #############
+# #########################################################
 mkdir -p $SITE_ROOT/$SQL_DUMPS_DIR
 mysqldump -h $MYSQL_HOST -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE > $SQL_DUMPS_DIR/$MYSQL_DATABASE-$DATABASE_VERSION.sql
 
@@ -91,36 +111,78 @@ mysqldump -h $MYSQL_HOST -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE > $SQL
 ##
 if [ -L $SITE_ROOT/$SQL_DUMPS_DIR/latest ]; then
     realPath=`realpath $SITE_ROOT/$SQL_DUMPS_DIR/latest`
-    ln -s $realPath $SITE_ROOT/$SQL_DUMPS_DIR/previous
+    ln -sf $realPath $SITE_ROOT/$SQL_DUMPS_DIR/previous
     rm $SITE_ROOT/$SQL_DUMPS_DIR/latest
 fi
 
-ln -s $SITE_ROOT/$SQL_DUMPS_DIR/$MYSQL_DATABASE-$DATABASE_VERSION.sql $SITE_ROOT/$SQL_DUMPS_DIR/latest
+ln -sf $SITE_ROOT/$SQL_DUMPS_DIR/$MYSQL_DATABASE-$DATABASE_VERSION.sql $SITE_ROOT/$SQL_DUMPS_DIR/latest
 
-if [ $? -eq 0 ]; then echo -e "\e[32mMySQL dump successful\e[39m"; fi
+if [ $? -eq 0 ]; then echo -e "\e[32mMySQL dump successful ✓\e[39m"; fi
 
 cd $SITE_ROOT/$REPO_DIR
 
+# #########################################################
 
-# #############
-# Continue?
-# #############
-#read -p "Continue with pull from git? (Yes/No): " cont
-#caseCont=`echo $cont | tr 'A-Z' 'a-z'`
 
-#if [[ $caseCont != "yes" ]]; then 
-#    echo -e "\e[31mExiting Deployment\e[39m";
-#    exit
-#fi
 
-# #########
-# Git fetch
-# #########
-git fetch --all
-git checkout $branch
-git checkout composer.lock
-git pull origin $branch
-if [ -t 1 ]; then echo -e "\e[32mPulled from $branch branch\e[39m"; fi
+# #########################################################
+# 2. Git fetch
+# #########################################################
+GIT_SUCCESS=true
+#
+# Display git failed message. Pass an arg to display - e.g.:
+#   git_fail "fetch" - gives "fetch failed ✗"
+#
+function git_fail() {
+    echo -e "\e[31mRepository retrieval failed ✗\e[39m";
+
+    if ! [ -z "$1" ]
+    then
+        echo -e "\e[31m$1 failed ✗\e[39m";
+    fi
+
+    echo -e "\e[31mDeployment failed ✗\e[39m";
+    exit 1
+}
+
+if [ "$VERBOSE" = true ]
+then
+    if ! (git fetch --all)
+    then
+        GIT_SUCCESS=false;
+        git_fail "fetch";
+    fi
+    if ! (git checkout $branch) then
+        GIT_SUCCESS=false
+        git_fail "checkout $branch";
+    fi
+    if ! (git pull origin $branch) then
+        GIT_SUCCESS=false
+        git_fail "pull $branch";
+    fi
+else
+    if ! (git fetch --all &> /dev/null) then
+        GIT_SUCCESS=false;
+        git_fail "fetch";
+    fi
+    if ! (git checkout --quiet $branch) then
+        GIT_SUCCESS=false
+        git_fail "checkout $branch";
+    fi
+    if ! (git pull --quiet origin $branch) then
+        GIT_SUCCESS=false
+        git_fail "pull $branch";
+    fi
+fi
+
+if [ "$GIT_SUCCESS" = true ]
+then
+    echo -e "\e[32mGit successfully pulled from $branch branch ✓\e[39m";
+else
+    git_fail
+fi
+
+# #########################################################
 
 
 if [ $MODE == "full" ]; then
