@@ -1,22 +1,29 @@
 #!/bin/bash
-echo -en "\e[92m"
+echo -en "\e[34m"
 cat << EOF
 
 
-  d888888o.           .8.          8 8888   8888888 8888888888 \`8.\`8888.      ,8'
- .\`8888:' \`88.        .888.         8 8888         8 8888        \`8.\`8888.    ,8'
- 8.\`8888.   Y8       :88888.        8 8888         8 8888         \`8.\`8888.  ,8'
- \`8.\`8888.          . \`88888.       8 8888         8 8888          \`8.\`8888.,8'
-  \`8.\`8888.        .8. \`88888.      8 8888         8 8888           \`8.\`88888'
-   \`8.\`8888.      .8\`8. \`88888.     8 8888         8 8888            \`8. 8888
-    \`8.\`8888.    .8' \`8. \`88888.    8 8888         8 8888             \`8 8888
-8b   \`8.\`8888.  .8'   \`8. \`88888.   8 8888         8 8888              8 8888
-\`8b.  ;8.\`8888 .888888888. \`88888.  8 8888         8 8888              8 8888
- \`Y8888P ,88P'.8'       \`8. \`88888. 8 888888888888 8 8888              8 8888
+                     \`:o:
+                  \`:oyyyy
+               \`-+yyyyyyo
+             -+yyyyyyyy+\`
+          .+yyyyyyyyo:\`         \`\`
+         /yyyyyyys:\`       \`:+syyyyso/\`
+        :yyyyys/.         :yyyyyyyyyyyy+\`
+        oyyyyy.      \`:/ -yyyyyyssyyyyyys\`
+        +yyyyy/   \`:oyyy--yyyo:\`  \`/yyyyy+
+        \`syyyyyyssyyyyyy- /:\`      .yyyyyo
+         \`+yyyyyyyyyyyy:         ./syyyyy:
+           \`/osyyyys+:\`       \`/syyyyyyy/
+                \`\`         \`:oyyyyyyyy+.
+                         \`+yyyyyyyy+-
+                         oyyyyyy+-\`
+                         yyyyo:\`
+                         :o:\`
 
 
 EOF
-echo -e "\e[39mWelcome to the Salty deploment system."
+echo -e "\e[39mWelcome to the Salty SilverStripe deploment system."
 echo -e "\e[39m--------------------------------------"``
 echo -e "\n"
 
