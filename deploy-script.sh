@@ -38,7 +38,7 @@ echo -e "\e[39m--------------------------------------"
 # ###########################################
 # deploy-script.sh
 # ----------------
-# deployment script for salted herring sites.
+# deployment script for salted herring silverstripe sites.
 # Performs the following tasks:
 # 1. Backup current db.
 # 2. Checks out latest code.
@@ -54,17 +54,40 @@ echo -e "\e[39m--------------------------------------"
 # --v, --verbose - show all output.
 # ###########################################
 VERBOSE=false
-while test $# -gt 0
+CHOSEN_MODE=0
+CHOSEN_BRANCH=0
+
+read -d '' USAGE << END
+This script deploys SilverStripe based sites. It performs the following actions:
+
+1. Backs up current database & files
+2. Checks out the latest code
+3. Optionally updates composer & bower
+4. Synchronises the current site with the newly checked out code
+5. Synchronises the databases
+
+-----
+USAGE:
+
+./deployscript.sh [options]
+
+  -v Verbose - log all output
+  -m Mode    - indicates whether we run bower & compser - 1 for "Lite" mode; 2 for "Full" mode
+  -b Branch  - the branch to deploy from
+  -h Help    - Display this help
+
+
+END
+
+while getopts vm:b:h option
 do
-    case "$1" in
-        --verbose) VERBOSE=true
-            ;;
-        --*) echo "bad option $1"
-            ;;
-        *) echo "argument $1"
-            ;;
+    case "${option}"
+    in
+        v) VERBOSE=true;;
+        m) CHOSEN_MODE=${OPTARG};;
+        b) CHOSEN_BRANCH=${OPTARG};;
+        h) echo -e "$USAGE \n"; exit;;
     esac
-    shift
 done
 
 #
@@ -96,31 +119,64 @@ VERSION_NAME=$SITE_ROOT/$VERSIONS_DIR/$(date "+%Y-%m-%d-%H_%M_%S")
 # Choose mode & branch
 # #########################################################
 
-echo -e "Which environment would you like to deploy? \e[1m[Lite]\e[22m"
-echo "1. Lite (only file updates)"
-echo "2. Full (file, composer, and bower)"
-read -p "" userchoice
+if [ "$CHOSEN_MODE" = 0 ]
+then
+    echo -e "Which environment would you like to deploy? \e[1m[Lite]\e[22m"
+    echo "1. Lite (only file updates)"
+    echo "2. Full (file, composer, and bower)"
+    read -p "" userchoice
 
-if [[ -z "$userchoice" ]]; then
-   echo -e "\t• Lite mode chosen"
-   MODE=$DEFAULT_MODE
+    if [[ -z "$userchoice" ]]; then
+       echo -e "\t• Lite mode chosen"
+       MODE=$DEFAULT_MODE
+    else
+        case $userchoice in
+        1) echo -e "\t• Mode chosen: \e[1mLite\e[22m"
+            MODE="lite"
+            ;;
+        2) echo -e "\t• Mode chosen: \e[1mFull\e[22m"
+            MODE="full"
+            ;;
+        *) echo -e "\e[31mIncorrect mode chosen. Exiting ✗\e[39m"
+            exit
+            ;;
+        esac
+    fi
 else
-    case $userchoice in
+    case $CHOSEN_MODE in
     1) echo -e "\t• Mode chosen: \e[1mLite\e[22m"
         MODE="lite"
         ;;
     2) echo -e "\t• Mode chosen: \e[1mFull\e[22m"
         MODE="full"
         ;;
-    *) echo -e "\t• Mode chosen: \e[1mDevelopment\e[22m"
-        MODE="lite"
+    *) echo -e "\e[31mIncorrect mode chosen. Exiting ✗\e[39m"
+        exit
         ;;
     esac
 fi
 
-echo -e "\n"
-echo -e "Which branch should we deploy from?: \e[1m[$DEFAULT_BRANCH]\e[22m "
-read branch
+
+
+if [ "$CHOSEN_BRANCH" = 0 ]
+then
+    echo -e "\n"
+    echo -e "Which branch should we deploy from?: \e[1m[$DEFAULT_BRANCH]\e[22m "
+    read branch
+else
+    branch=$CHOSEN_BRANCH
+fi
+
+
+# check branch exists
+cd $SITE_ROOT/$REPO_DIR
+if !(git rev-parse --verify $branch &>/dev/null)
+then
+    echo -e "\e[31mCan't find the $branch branch in the current repository. You may want to perform a git fetch before running this again. \e[39m"
+    exit
+fi
+
+
 
 if [[ -z "$branch" ]]; then
    echo -e "\t• Deployment branch: \e[1m$DEFAULT_BRANCH\e[22m"
