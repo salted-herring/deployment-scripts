@@ -1,31 +1,39 @@
 #!/bin/bash
+startTime=`date +%s`
 echo -en "\e[34m"
 cat << EOF
 
 
-                     \`:o:
-                  \`:oyyyy
-               \`-+yyyyyyo
-             -+yyyyyyyy+\`
-          .+yyyyyyyyo:\`         \`\`
-         /yyyyyyys:\`       \`:+syyyyso/\`
-        :yyyyys/.         :yyyyyyyyyyyy+\`
-        oyyyyy.      \`:/ -yyyyyyssyyyyyys\`
-        +yyyyy/   \`:oyyy--yyyo:\`  \`/yyyyy+
-        \`syyyyyyssyyyyyy- /:\`      .yyyyyo
-         \`+yyyyyyyyyyyy:         ./syyyyy:
-           \`/osyyyys+:\`       \`/syyyyyyy/
-                \`\`         \`:oyyyyyyyy+.
-                         \`+yyyyyyyy+-
-                         oyyyyyy+-\`
-                         yyyyo:\`
-                         :o:\`
+
+
+                         :hh   dMs  -yo
+                   \`.  \`NM/  /MN\`  hMs  .y/
+                  +m-  sMh  \`NM/  /Mm\`  hMo
+                 yMs  .NM-  sMd  \`mM/  /Mm\`
+                :MN\`  hMs  \`so.  /Nd  \`mM/
+                mM/  :MN\`             oMh
+                Md   NM/  .           \`/.
+                m-  oMd  \`mh\`
+                \`  .NM-  oMd   /.
+                   hMs  .MM-  oMd  \`:\`
+                   hN\`  hMy  .NM-  oMd
+                    \`  :MN.  yMy  \`NM-  oh.
+                       -o/  :MN\`  yMy  .NM-
+                            :h+  -MN\`  hMs  ..
+                                 dM+  :MN\`  hm
+                                 \`o   mM+  :MN
+                    -/\`              +Md   mM+
+                    mMo  \`\`         \`NM:  +Md
+                   +Mm\`  dM+  -yh\`  yMy  .NM-
+                  \`NM:  /Mm   dMo  -MN\`  yMy
+                  yMh  \`NM/  +Mm   mM+  :Mm\`
+                  -s.  sMh  \`NM:  +Mm\`  +-
+                       +s.  +My  \`hh:
 
 
 EOF
-echo -e "\e[39mWelcome to the Salty SilverStripe deploment system."
-echo -e "\e[39m--------------------------------------"``
-echo -e "\n"
+echo -e "\e[39mWelcome to the Salted Herring SilverStripe deploment system."
+echo -e "\e[39m--------------------------------------"
 
 # ###########################################
 # deploy-script.sh
@@ -63,23 +71,23 @@ done
 # Script vars. Set these up prior to running.
 #
 SITE_ROOT=$(pwd)
-DEFAULT_BRANCH="develop"
+
+ASSETS_DIR="$SITE_ROOT/assets"
+DATABASE_VERSION=$(date "+%Y-%m-%d-%H_%M_%S")
+DEFAULT_BRANCH="master"
 DEFAULT_MODE="lite"
-HTDOCS_DIR="public_html"
-SQL_DUMPS_DIR="sql-dumps"
-REPO_DIR="repo"
-VERSIONS_DIR="versions"
+HTACCESS="$SITE_ROOT/htaccess"
+HTDOCS_DIR="htdocs"
 MYSQL_HOST="localhost"
 MYSQL_USER="silverstripe"
 MYSQL_PASSWORD="nU3asT52uwUb"
 MYSQL_DATABASE="ss_wildeyes"
-DATABASE_VERSION=$(date "+%Y-%m-%d-%H_%M_%S")
-VERSION_NAME=$SITE_ROOT/$VERSIONS_DIR/$(date "+%Y-%m-%d-%H_%M_%S")
-HTACCESS="$SITE_ROOT/htaccess"
+REPO_DIR="repo"
 ROBOTS="$SITE_ROOT/robots.txt"
-ASSETS_DIR="$SITE_ROOT/assets"
+SQL_DUMPS_DIR="sql-dumps"
+VERSIONS_DIR="versions"
+VERSION_NAME=$SITE_ROOT/$VERSIONS_DIR/$(date "+%Y-%m-%d-%H_%M_%S")
 
-previous=""
 # ##########################################
 # YOU SHOULDN'T HAVE TO EDIT BELOW HERE.
 # ##########################################
@@ -98,90 +106,35 @@ if [[ -z "$userchoice" ]]; then
    MODE=$DEFAULT_MODE
 else
     case $userchoice in
-    1) echo -e "\t• Lite mode chosen"
+    1) echo -e "\t• Mode chosen: \e[1mLite\e[22m"
         MODE="lite"
         ;;
-    2) echo -e "\t• Full mode chosen"
+    2) echo -e "\t• Mode chosen: \e[1mFull\e[22m"
         MODE="full"
         ;;
-    *) echo -e "\t• Default to development"
+    *) echo -e "\t• Mode chosen: \e[1mDevelopment\e[22m"
         MODE="lite"
         ;;
     esac
 fi
 
 echo -e "\n"
-
-read -p "Which branch should we deploy from?: \e[1m[$DEFAULT_BRANCH]\e[22m " branch
+echo -e "Which branch should we deploy from?: \e[1m[$DEFAULT_BRANCH]\e[22m "
+read branch
 
 if [[ -z "$branch" ]]; then
-   printf '%s\n' "Deployment branch: $DEFAULT_BRANCH"
+   echo -e "\t• Deployment branch: \e[1m$DEFAULT_BRANCH\e[22m"
    branch=$DEFAULT_BRANCH
 else
-   printf 'Deployment branch: %s\n' "$branch"
+   echo -e "\t• Deployment branch: \e[1m$branch\e[22m"
 fi
 
 echo -e "\n"
 
 # #########################################################
-# Find the latest version & link it as the previous version
-# (ensuring rolling back is straight forward)
-# #########################################################
-
-if [ -L $SITE_ROOT/$VERSIONS_DIR/latest ]; then
-    cd $SITE_ROOT/$VERSIONS_DIR/latest
-    previous=`pwd -P`
-
-    if [ -L $SITE_ROOT/$VERSIONS_DIR/latest ]; then
-        rm $SITE_ROOT/$VERSIONS_DIR/previous
-    fi
-
-    ln -sf $previous $SITE_ROOT/$VERSIONS_DIR/previous
-    #rm $SITE_ROOT/$VERSIONS_DIR/latest
-fi
-
-cd $SITE_ROOT
-
-# #########################################################
-# 1. MySQL Dump
-# #########################################################
-mkdir -p $SITE_ROOT/$SQL_DUMPS_DIR
-if [ "$VERBOSE" = true ]
-then
-    echo -e "\e[90mStarting MySQL dump\e[39m";
-    mysqldump -v -h $MYSQL_HOST -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE > $SQL_DUMPS_DIR/$MYSQL_DATABASE-$DATABASE_VERSION.sql
-else
-    mysqldump -h $MYSQL_HOST -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE > $SQL_DUMPS_DIR/$MYSQL_DATABASE-$DATABASE_VERSION.sql
-fi
-
-
-##
-# Create symlink to latest dump
-##
-if [ -L $SITE_ROOT/$SQL_DUMPS_DIR/latest ]; then
-    realPath=`realpath $SITE_ROOT/$SQL_DUMPS_DIR/latest`
-    ln -sf $realPath $SITE_ROOT/$SQL_DUMPS_DIR/previous
-    rm $SITE_ROOT/$SQL_DUMPS_DIR/latest
-fi
-
-ln -sf $SITE_ROOT/$SQL_DUMPS_DIR/$MYSQL_DATABASE-$DATABASE_VERSION.sql $SITE_ROOT/$SQL_DUMPS_DIR/latest
-
-if [ $? -eq 0 ]; then echo -e "\e[32mMySQL dump successful ✓\e[39m"; fi
-
-cd $SITE_ROOT/$REPO_DIR
-
-# #########################################################
-
-
-
-# #########################################################
-# 2. Git fetch
+# 1. Git fetch
 # #########################################################
 GIT_SUCCESS=true
-#
-# Display git failed message. Pass an arg to display - e.g.:
-#   git_fail "fetch" - gives "fetch failed ✗"
-#
 function git_fail() {
     echo -e "\e[31mRepository retrieval failed ✗\e[39m";
 
@@ -193,6 +146,9 @@ function git_fail() {
     echo -e "\e[31mDeployment failed ✗\e[39m";
     exit 1
 }
+
+echo -e "\e[38;5;237mGit attempting to pull from \e[1m$branch\e[22m..."
+cd $SITE_ROOT/$REPO_DIR
 
 if [ "$VERBOSE" = true ]
 then
@@ -234,59 +190,212 @@ fi
 # #########################################################
 
 
+# #########################################################
+# 2. Composer Update
+# #########################################################
+COMPOSER_SUCCESS=true
 if [ $MODE == "full" ]; then
-    echo -e "\e[32mUpdating composer... \e[39m";
-    composer update;
-    echo -e "\e[32mComposer updated. Now bower... \e[39m";
-    cd themes/default;
-    bower update;
-    echo -e "\e[32mBower updated.\e[39m";
+    echo -e "\e[38;5;237mUpdating composer (please be patient - this may take some time)... ";
+    if [ "$VERBOSE" = true ]
+    then
+        if ! (composer update)
+        then
+            COMPOSER_SUCCESS=false
+            echo -e "\e[31mComposer update failed ✗\e[39m";
+        fi
+    else
+        if ! (composer --quiet update)
+        then
+            COMPOSER_SUCCESS=false
+            echo -e "\e[31mComposer update failed ✗\e[39m";
+        fi
+    fi
+
+    if [ "$COMPOSER_SUCCESS" = true ]
+    then
+        echo -e "\e[32mComposer successfully updated ✓\e[39m";
+    fi
 fi
 
-if [ -t 1 ]; then echo -e "\e[32mPreparing to depreciate the current public_html\e[39m"; fi
-cd $SITE_ROOT
-cp -rf $SITE_ROOT/$REPO_DIR $VERSION_NAME
-
-rm $SITE_ROOT/$VERSIONS_DIR/latest
-ln -s $VERSION_NAME $SITE_ROOT/$VERSIONS_DIR/latest
+# #########################################################
 
 
-if [ -t 1 ]; then echo -e "\e[32mCurrent public_html has been depreciated\e[39m"; fi
-rm -rf $SITE_ROOT/$HTDOCS_DIR;
-ln -s $VERSION_NAME $SITE_ROOT/$HTDOCS_DIR
-cd $SITE_ROOT/$HTDOCS_DIR
-if [ -t 1 ]; then echo -e "\e[32mCreating symbolic link to assets directory...\e[39m"; fi
-rm -rf $SITE_ROOT/$HTDOCS_DIR/assets
-ln -s $ASSETS_DIR .
-if [ -t 1 ]; then echo -e "\e[32mRefreshing database\e[39m"; fi
+# #########################################################
+# 3. Bower Update
+# #########################################################
+BOWER_SUCCESS=true
+if [ $MODE == "full" ]; then
+    echo -e "\e[38;5;237mUpdating bower (please be patient - this may take some time)... ";
+    if [ "$VERBOSE" = true ]
+    then
+        if ! (bower update)
+        then
+            BOWER_SUCCESS=false
+            echo -e "\e[31mBower update failed ✗\e[39m";
+        fi
+    else
+        if ! (bower --quiet update)
+        then
+            BOWER_SUCCESS=false
+            echo -e "\e[31mBower update failed ✗\e[39m";
+        fi
+    fi
 
-# #########################
-# Archive previous versions
-# #########################
-cd $SITE_ROOT/$VERSIONS_DIR
-
-if [ -L $SITE_ROOT/$SQL_DUMPS_DIR/previous ]; then
-    realPath=`realpath $SITE_ROOT/$SQL_DUMPS_DIR/previous`
-    dateName=part1=`dirname $realPath`
-    tar -czvf $dateName.tgz $realPath
-    rm -rf $realPath
-    ln -s $dateName.tgz $SITE_ROOT/$SQL_DUMPS_DIR/previous
+    if [ "$BOWER_SUCCESS" = true ]
+    then
+        echo -e "\e[32mBower successfully updated ✓\e[39m";
+    fi
 fi
 
+# #########################################################
 
-cd $SITE_ROOT/$HTDOCS_DIR
 
-if [ $MODE == "full" ];
+# #########################################################
+# 4. MySQL Dump
+# #########################################################
+MYSQL_SUCCESS=true
+echo -e "\e[38;5;237mStarting MySQL dump...\e[39m";
+mkdir -p $SITE_ROOT/$SQL_DUMPS_DIR
+cd $SITE_ROOT/$SQL_DUMPS_DIR
+if [ "$VERBOSE" = true ]
 then
-    sake dev/build flush=all;
+    if !(mysqldump -v -h $MYSQL_HOST -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE > $MYSQL_DATABASE-$DATABASE_VERSION.sql)
+    then
+        MYSQL_SUCCESS=false
+    fi
 else
-    sake dev/build;
+    if !(mysqldump -h $MYSQL_HOST -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE > $MYSQL_DATABASE-$DATABASE_VERSION.sql)
+    then
+        MYSQL_SUCCESS=false
+    fi
 fi
-if [ -t 1 ]; then echo -e "\e[32mDatabase refreshed\e[39m"; fi
-if [ -t 1 ]; then echo -e "\e[32mCleaning...\e[39m"; fi
-rm -rf .git*
-rm .editorconfig
+
+if [ "$MYSQL_SUCCESS" = true ]
+then
+    echo -e "\e[32mMySQL dump successful ✓\e[39m"
+else
+    echo -e "\e[31mMySQL dump failed ✗\e[39m";
+fi
+
+# #########################################################
+
+
+# #########################################################
+# 5. Archive old htdocs dir & sql dump
+# #########################################################
+
+echo -e "\e[38;5;237mArchiving the current $HTDOCS_DIR...";
+
+HTDOCS_SUCCESS=true
+cd $SITE_ROOT
+
+if [ "$VERBOSE" = true ]
+then
+    if ! (tar -czvf $VERSION_NAME.tgz --exclude=assets $HTDOCS_DIR $SQL_DUMPS_DIR/$MYSQL_DATABASE-$DATABASE_VERSION.sql)
+    then
+        HTDOCS_SUCCESS=false
+    fi
+else
+    if ! (tar -czf $VERSION_NAME.tgz --exclude=assets $HTDOCS_DIR $SQL_DUMPS_DIR/$MYSQL_DATABASE-$DATABASE_VERSION.sql)
+    then
+        HTDOCS_SUCCESS=false
+    fi
+fi
+
+if [ "$HTDOCS_SUCCESS" = true ]
+then
+    cd $VERSIONS_DIR
+    ln -sf $(basename $VERSION_NAME.tgz) latest
+    echo -e "\e[32m$HTDOCS_DIR successfully archived ✓\e[39m";
+else
+    echo -e "\e[31m$HTDOCS_DIR archiving failed ✗\e[39m";
+fi
+
+# clean up sql
+rm -rf $SITE_ROOT/$SQL_DUMPS_DIR
+
+# #########################################################
+
+
+# #########################################################
+# 6. Sync repo & htdocs
+# #########################################################
+cd $SITE_ROOT
+SYNC_SUCCESS=true
+echo -e "\e[38;5;237mSynching the repo & $HTDOCS_DIR...\e[39m"
+
+if [ "$VERBOSE" = true ]
+then
+    if !(rsync -av --delete $REPO_DIR/ $HTDOCS_DIR --exclude .git* --exclude .gitignore --exclude .gitmodules --exclude readme.txt --exclude .htaccess --exclude robots.txt --exclude assets)
+    then
+        echo -e "\e[31mSynchronisation failed ✗\e[39m";
+        SYNC_SUCCESS=false
+    fi
+else
+    if !(rsync -a --delete $REPO_DIR/ $HTDOCS_DIR --exclude .git* --exclude .gitignore --exclude .gitmodules --exclude readme.txt --exclude .htaccess --exclude robots.txt --exclude assets)
+    then
+        echo -e "\e[31mSynchronisation failed ✗\e[39m";
+        SYNC_SUCCESS=false
+    fi
+fi
+
+if [ "$SYNC_SUCCESS" = true ]
+then
+    echo -e "\e[32mSynchronisation successfully completed ✓\e[39m";
+fi
+
+
+# #########################################################
+# 6. Run sake
+# #########################################################
+cd $SITE_ROOT/$HTDOCS_DIR
+SAKE_SUCCESS=true
+echo -e "\e[38;5;237mSynching the database...\e[39m"
+if [ "$VERBOSE" = true ]
+then
+    if [ $MODE == "full" ]
+    then
+        if ! (php framework/cli-script.php dev/build flush=all)
+        then
+            SAKE_SUCCESS=false
+        fi
+    else
+        if ! (php framework/cli-script.php dev/build)
+        then
+            SAKE_SUCCESS=false
+        fi
+    fi
+else
+    if [ $MODE == "full" ]
+    then
+        if ! (php framework/cli-script.php dev/build flush=all &>/dev/null)
+        then
+            SAKE_SUCCESS=false
+        fi
+    else
+        if ! (php framework/cli-script.php dev/build &>/dev/null)
+        then
+            SAKE_SUCCESS=false
+        fi
+    fi
+fi
+
+if [ "$SAKE_SUCCESS" = true ]
+then
+    echo -e "\e[32mdatabase sync successful ✓\e[39m"
+else
+    echo -e "\e[31mdatabase sync failed ✗\e[39m"
+fi
+
+ln -sf ../assets .
 cp $HTACCESS ./.htaccess
 cp $ROBOTS ./robots.txt
 cd $SITE_ROOT
-if [ -t 1 ]; then echo -e "\e[32mDeployment successful\e[39m"; fi
+
+endTime=`date +%s`
+executionTime=$((endTime-startTime))
+
+echo -e "-------------------------"
+echo -e "\xF0\x9F\x8D\xBA \e[38;5;74mDeployment successful!\e[39m"
+echo -e "\e[93mTime taken $executionTime seconds\e[39m"
+exit 0
