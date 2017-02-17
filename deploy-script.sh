@@ -187,91 +187,16 @@ fi
 
 echo -e "\n"
 
-# #########################################################
+
 # 1. Git fetch
 # #########################################################
-GIT_SUCCESS=true
-function git_fail() {
-    echo -e "\e[31mRepository retrieval failed ✗\e[39m";
+source $SITE_ROOT/deployment-modules/git_functions.sh
+git_fetch $branch $SITE_ROOT/$REPO_DIR $VERBOSE
 
-    if ! [ -z "$1" ]
-    then
-        echo -e "\e[31m$1 failed ✗\e[39m";
-    fi
-
-    echo -e "\e[31mDeployment failed ✗\e[39m";
-    exit 1
-}
-
-echo -e "\e[38;5;237mGit attempting to pull from \e[1m$branch\e[22m..."
-cd $SITE_ROOT/$REPO_DIR
-
-if [ "$VERBOSE" = true ]
-then
-    if ! (git fetch --all)
-    then
-        GIT_SUCCESS=false;
-        git_fail "fetch";
-    fi
-    if ! (git checkout $branch) then
-        GIT_SUCCESS=false
-        git_fail "checkout $branch";
-    fi
-    if ! (git pull origin $branch) then
-        GIT_SUCCESS=false
-        git_fail "pull $branch";
-    fi
-else
-    if ! (git fetch --all &> /dev/null) then
-        GIT_SUCCESS=false;
-        git_fail "fetch";
-    fi
-    if ! (git checkout --quiet $branch) then
-        GIT_SUCCESS=false
-        git_fail "checkout $branch";
-    fi
-    if ! (git pull --quiet origin $branch) then
-        GIT_SUCCESS=false
-        git_fail "pull $branch";
-    fi
-fi
-
-if [ "$GIT_SUCCESS" = true ]
-then
-    echo -e "\e[32mGit successfully pulled from $branch branch ✓\e[39m";
-else
-    git_fail
-fi
-
-# #########################################################
-
-
-# #########################################################
 # 2. Composer Update
 # #########################################################
-COMPOSER_SUCCESS=true
-if [ $MODE == "full" ]; then
-    echo -e "\e[38;5;237mUpdating composer (please be patient - this may take some time)... ";
-    if [ "$VERBOSE" = true ]
-    then
-        if ! (composer update)
-        then
-            COMPOSER_SUCCESS=false
-            echo -e "\e[31mComposer update failed ✗\e[39m";
-        fi
-    else
-        if ! (composer --quiet update)
-        then
-            COMPOSER_SUCCESS=false
-            echo -e "\e[31mComposer update failed ✗\e[39m";
-        fi
-    fi
-
-    if [ "$COMPOSER_SUCCESS" = true ]
-    then
-        echo -e "\e[32mComposer successfully updated ✓\e[39m";
-    fi
-fi
+source $SITE_ROOT/deployment-modules/composer_functions.sh
+composer_update $MODE $VERBOSE
 
 # #########################################################
 
