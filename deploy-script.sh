@@ -1,5 +1,5 @@
 #!/bin/bash
-startTime=`date +%s`
+startTime=$(date +%s)
 echo -en "\e[34m"
 cat << EOF
 
@@ -56,6 +56,7 @@ echo -e "\e[39m--------------------------------------"
 VERBOSE=false
 CHOSEN_MODE=0
 CHOSEN_BRANCH=0
+CHOSEN_THEME=false
 
 read -d '' USAGE << END
 This script deploys SilverStripe based sites. It performs the following actions:
@@ -75,16 +76,17 @@ USAGE:
   -m Mode    - indicates whether we run bower & compser - 1 for "Lite" mode; 2 for "Full" mode
   -b Branch  - the branch to deploy from
   -h Help    - Display this help
-
+  -t Theme   - Theme to use when running bower
 
 END
 
-while getopts vm:b:h option
+while getopts vm:t:b:h option
 do
     case "${option}"
     in
         v) VERBOSE=true;;
         m) CHOSEN_MODE=${OPTARG};;
+        t) CHOSEN_THEME=${OPTARG};;
         b) CHOSEN_BRANCH=${OPTARG};;
         h) echo -e "$USAGE \n"; exit;;
     esac
@@ -99,6 +101,7 @@ ASSETS_DIR="$SITE_ROOT/assets"
 DATABASE_VERSION=$(date "+%Y-%m-%d-%H_%M_%S")
 DEFAULT_BRANCH="master"
 DEFAULT_MODE="lite"
+DEFAULT_THEME="default"
 HTACCESS="$SITE_ROOT/htaccess"
 HTDOCS_DIR="htdocs"
 MYSQL_HOST="localhost"
@@ -108,6 +111,7 @@ MYSQL_DATABASE="ss_wildeyes"
 REPO_DIR="repo"
 ROBOTS="$SITE_ROOT/robots.txt"
 SQL_DUMPS_DIR="sql-dumps"
+THEME_DIR="$SITE_ROOT/$REPO_DIR/themes"
 VERSIONS_DIR="versions"
 VERSION_NAME=$SITE_ROOT/$VERSIONS_DIR/$(date "+%Y-%m-%d-%H_%M_%S")
 
@@ -157,7 +161,6 @@ else
 fi
 
 
-
 if [ "$CHOSEN_BRANCH" = 0 ]
 then
     echo -e "\n"
@@ -169,8 +172,8 @@ fi
 
 
 # check branch exists
-cd $SITE_ROOT/$REPO_DIR
-if !(git rev-parse --verify $branch &>/dev/null)
+cd "$SITE_ROOT/$REPO_DIR" || exit
+if ! (git rev-parse --verify "$branch" &>/dev/null)
 then
     echo -e "\e[31mCan't find the $branch branch in the current repository. You may want to perform a git fetch before running this again. \e[39m"
     exit
@@ -185,67 +188,66 @@ else
    echo -e "\t• Deployment branch: \e[1m$branch\e[22m"
 fi
 
+#
+# If the chosen mode is full - then ask for the theme directory to
+# run bower from.
+#
+if [ "$MODE" = full ]
+then
+    if [ "$CHOSEN_THEME" = false ]
+    then
+        echo -e "\n"
+        echo -e "Which theme should bower be run from? \e[1m[$DEFAULT_THEME]\e[22m"
+        read -p "" theme
+
+        if [[ -z "$theme" ]]; then
+            CHOSEN_THEME=$DEFAULT_THEME
+        else
+            CHOSEN_THEME=$theme
+        fi
+
+        echo -e "\t• Chosen theme: \e[1m$CHOSEN_THEME\e[22m"
+    else
+        echo -e "\t• Chosen theme: \e[1m$CHOSEN_THEME\e[22m"
+    fi
+fi
+
 echo -e "\n"
 
 
 # 1. Git fetch
 # #########################################################
-source $SITE_ROOT/deployment-modules/git_functions.sh
-git_fetch $branch $SITE_ROOT/$REPO_DIR $VERBOSE
+# shellcheck source=deployment-modules/git_functions.sh
+source "$SITE_ROOT"/deployment-modules/git_functions.sh
+git_fetch "$branch" "$SITE_ROOT"/"$REPO_DIR" "$VERBOSE"
 
 # 2. Composer Update
 # #########################################################
-source $SITE_ROOT/deployment-modules/composer_functions.sh
-composer_update $MODE $VERBOSE
+# shellcheck source=deployment-modules/composer_functions.sh
+source "$SITE_ROOT"/deployment-modules/composer_functions.sh
+composer_update "$MODE" "$VERBOSE"
 
-# #########################################################
-
-
-# #########################################################
 # 3. Bower Update
 # #########################################################
-BOWER_SUCCESS=true
-if [ $MODE == "full" ]; then
-    echo -e "\e[38;5;237mUpdating bower (please be patient - this may take some time)... ";
-    if [ "$VERBOSE" = true ]
-    then
-        if ! (bower update)
-        then
-            BOWER_SUCCESS=false
-            echo -e "\e[31mBower update failed ✗\e[39m";
-        fi
-    else
-        if ! (bower --quiet update)
-        then
-            BOWER_SUCCESS=false
-            echo -e "\e[31mBower update failed ✗\e[39m";
-        fi
-    fi
-
-    if [ "$BOWER_SUCCESS" = true ]
-    then
-        echo -e "\e[32mBower successfully updated ✓\e[39m";
-    fi
-fi
-
-# #########################################################
-
+# shellcheck source=deployment-modules/bower_functions.sh
+source "$SITE_ROOT"/deployment-modules/bower_functions.sh
+bower_update "$MODE" "$VERBOSE" "$CHOSEN_THEME" "$THEME_DIR" "$SITE_ROOT"
 
 # #########################################################
 # 4. MySQL Dump
 # #########################################################
 MYSQL_SUCCESS=true
 echo -e "\e[38;5;237mStarting MySQL dump...\e[39m";
-mkdir -p $SITE_ROOT/$SQL_DUMPS_DIR
-cd $SITE_ROOT/$SQL_DUMPS_DIR
+mkdir -p "$SITE_ROOT"/"$SQL_DUMPS_DIR"
+cd "$SITE_ROOT"/"$SQL_DUMPS_DIR" || exit
 if [ "$VERBOSE" = true ]
 then
-    if !(mysqldump -v -h $MYSQL_HOST -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE > $MYSQL_DATABASE-$DATABASE_VERSION.sql)
+    if ! (mysqldump -v -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" > "$MYSQL_DATABASE"-"$DATABASE_VERSION".sql)
     then
         MYSQL_SUCCESS=false
     fi
 else
-    if !(mysqldump -h $MYSQL_HOST -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE > $MYSQL_DATABASE-$DATABASE_VERSION.sql)
+    if ! (mysqldump -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" > "$MYSQL_DATABASE"-"$DATABASE_VERSION".sql)
     then
         MYSQL_SUCCESS=false
     fi
@@ -268,16 +270,16 @@ fi
 echo -e "\e[38;5;237mArchiving the current $HTDOCS_DIR...";
 
 HTDOCS_SUCCESS=true
-cd $SITE_ROOT
+cd "$SITE_ROOT" || exit
 
 if [ "$VERBOSE" = true ]
 then
-    if ! (tar -czvf $VERSION_NAME.tgz --exclude=assets $HTDOCS_DIR $SQL_DUMPS_DIR/$MYSQL_DATABASE-$DATABASE_VERSION.sql)
+    if ! (tar -czvf "$VERSION_NAME".tgz --exclude=assets "$HTDOCS_DIR" "$SQL_DUMPS_DIR"/"$MYSQL_DATABASE"-"$DATABASE_VERSION".sql)
     then
         HTDOCS_SUCCESS=false
     fi
 else
-    if ! (tar -czf $VERSION_NAME.tgz --exclude=assets $HTDOCS_DIR $SQL_DUMPS_DIR/$MYSQL_DATABASE-$DATABASE_VERSION.sql)
+    if ! (tar -czf "$VERSION_NAME".tgz --exclude=assets "$HTDOCS_DIR" "$SQL_DUMPS_DIR"/"$MYSQL_DATABASE"-"$DATABASE_VERSION".sql)
     then
         HTDOCS_SUCCESS=false
     fi
@@ -285,15 +287,15 @@ fi
 
 if [ "$HTDOCS_SUCCESS" = true ]
 then
-    cd $VERSIONS_DIR
-    ln -sf $(basename $VERSION_NAME.tgz) latest
+    cd "$VERSIONS_DIR" || exit
+    ln -sf "$(basename "$VERSION_NAME".tgz)" latest
     echo -e "\e[32m$HTDOCS_DIR successfully archived ✓\e[39m";
 else
     echo -e "\e[31m$HTDOCS_DIR archiving failed ✗\e[39m";
 fi
 
 # clean up sql
-rm -rf $SITE_ROOT/$SQL_DUMPS_DIR
+rm -rf "${SITE_ROOT:?}"/"$SQL_DUMPS_DIR"
 
 # #########################################################
 
@@ -301,19 +303,19 @@ rm -rf $SITE_ROOT/$SQL_DUMPS_DIR
 # #########################################################
 # 6. Sync repo & htdocs
 # #########################################################
-cd $SITE_ROOT
+cd "$SITE_ROOT" || exit
 SYNC_SUCCESS=true
 echo -e "\e[38;5;237mSynching the repo & $HTDOCS_DIR...\e[39m"
 
 if [ "$VERBOSE" = true ]
 then
-    if !(rsync -av --delete $REPO_DIR/ $HTDOCS_DIR --exclude .git* --exclude .gitignore --exclude .gitmodules --exclude readme.txt --exclude .htaccess --exclude robots.txt --exclude assets)
+    if ! (rsync -av --delete "$REPO_DIR"/ "$HTDOCS_DIR" --exclude .git* --exclude .gitignore --exclude .gitmodules --exclude readme.txt --exclude .htaccess --exclude robots.txt --exclude assets)
     then
         echo -e "\e[31mSynchronisation failed ✗\e[39m";
         SYNC_SUCCESS=false
     fi
 else
-    if !(rsync -a --delete $REPO_DIR/ $HTDOCS_DIR --exclude .git* --exclude .gitignore --exclude .gitmodules --exclude readme.txt --exclude .htaccess --exclude robots.txt --exclude assets)
+    if ! (rsync -a --delete "$REPO_DIR"/ "$HTDOCS_DIR" --exclude .git* --exclude .gitignore --exclude .gitmodules --exclude readme.txt --exclude .htaccess --exclude robots.txt --exclude assets)
     then
         echo -e "\e[31mSynchronisation failed ✗\e[39m";
         SYNC_SUCCESS=false
@@ -329,12 +331,12 @@ fi
 # #########################################################
 # 6. Run sake
 # #########################################################
-cd $SITE_ROOT/$HTDOCS_DIR
+cd "$SITE_ROOT"/"$HTDOCS_DIR" || exit
 SAKE_SUCCESS=true
 echo -e "\e[38;5;237mSynching the database...\e[39m"
 if [ "$VERBOSE" = true ]
 then
-    if [ $MODE == "full" ]
+    if [ "$MODE" == "full" ]
     then
         if ! (php framework/cli-script.php dev/build flush=all)
         then
@@ -347,7 +349,7 @@ then
         fi
     fi
 else
-    if [ $MODE == "full" ]
+    if [ "$MODE" == "full" ]
     then
         if ! (php framework/cli-script.php dev/build flush=all &>/dev/null)
         then
@@ -369,11 +371,11 @@ else
 fi
 
 ln -sf ../assets .
-cp $HTACCESS ./.htaccess
-cp $ROBOTS ./robots.txt
-cd $SITE_ROOT
+cp "$HTACCESS" ./.htaccess
+cp "$ROBOTS" ./robots.txt
+cd "$SITE_ROOT" || exit
 
-endTime=`date +%s`
+endTime=$(date +%s)
 executionTime=$((endTime-startTime))
 
 echo -e "-------------------------"
