@@ -249,47 +249,15 @@ bower_update "$MODE" "$VERBOSE" "$CHOSEN_THEME" "$THEME_DIR" "$SITE_ROOT"
 # #########################################################
 # shellcheck source=deployment-modules/mysqldump_functions.sh
 source "$SITE_ROOT"/deployment-modules/mysqldump_functions.sh
-mysql_dump_fn "$SITE_ROOT"/"$SQL_DUMPS_DIR" "$VERBOSE" "$MYSQL_HOST" "$MYSQL_USER" "$MYSQL_PASSWORD" "$MYSQL_DATABASE" "$DATABASE_VERSION"
-
-# #########################################################
+mysql_dump_fn "$SITE_ROOT"/"$SQL_DUMPS_DIR" "$VERBOSE" "$MYSQL_HOST" "$MYSQL_USER" "$MYSQL_PASSWORD" "$MYSQL_DATABASE" "$DATABASE_VERSION" "$SITE_ROOT"
 
 
-# #########################################################
+#
 # 5. Archive old htdocs dir & sql dump
 # #########################################################
-
-echo -e "\e[38;5;237mArchiving the current $HTDOCS_DIR...";
-
-HTDOCS_SUCCESS=true
-cd "$SITE_ROOT" || exit
-
-if [ "$VERBOSE" = true ]
-then
-    if ! (tar -czvf "$VERSION_NAME".tgz --exclude=assets "$HTDOCS_DIR" "$SQL_DUMPS_DIR"/"$MYSQL_DATABASE"-"$DATABASE_VERSION".sql)
-    then
-        HTDOCS_SUCCESS=false
-    fi
-else
-    if ! (tar -czf "$VERSION_NAME".tgz --exclude=assets "$HTDOCS_DIR" "$SQL_DUMPS_DIR"/"$MYSQL_DATABASE"-"$DATABASE_VERSION".sql)
-    then
-        HTDOCS_SUCCESS=false
-    fi
-fi
-
-if [ "$HTDOCS_SUCCESS" = true ]
-then
-    cd "$VERSIONS_DIR" || exit
-    ln -sf "$(basename "$VERSION_NAME".tgz)" latest
-    echo -e "\e[32m$HTDOCS_DIR successfully archived ✓\e[39m";
-else
-    echo -e "\e[31m$HTDOCS_DIR archiving failed ✗\e[39m";
-fi
-
-# clean up sql
-rm -rf "${SITE_ROOT:?}"/"$SQL_DUMPS_DIR"
-
-# #########################################################
-
+# shellcheck source=deployment-modules/archiving_functions.sh
+source "$SITE_ROOT"/deployment-modules/archiving_functions.sh
+archive_site
 
 # #########################################################
 # 6. Sync repo & htdocs
