@@ -5,7 +5,7 @@ BOWER_SUCCESS=true
 #
 # bower_update:
 # -------------
-# Bower composer
+# Bower update
 #
 # @arg mode - whether we run in lite or full mode
 # @arg verbose - show/hide output

@@ -215,50 +215,41 @@ fi
 echo -e "\n"
 
 
+# #########################################################
+# MODULES
+# ---------------------------------------------------------
+# Load & run all available modules.
+# #########################################################
+
+
+
+#
 # 1. Git fetch
 # #########################################################
 # shellcheck source=deployment-modules/git_functions.sh
 source "$SITE_ROOT"/deployment-modules/git_functions.sh
 git_fetch "$branch" "$SITE_ROOT"/"$REPO_DIR" "$VERBOSE"
 
+#
 # 2. Composer Update
 # #########################################################
 # shellcheck source=deployment-modules/composer_functions.sh
 source "$SITE_ROOT"/deployment-modules/composer_functions.sh
 composer_update "$MODE" "$VERBOSE"
 
+#
 # 3. Bower Update
 # #########################################################
 # shellcheck source=deployment-modules/bower_functions.sh
 source "$SITE_ROOT"/deployment-modules/bower_functions.sh
 bower_update "$MODE" "$VERBOSE" "$CHOSEN_THEME" "$THEME_DIR" "$SITE_ROOT"
 
-# #########################################################
+#
 # 4. MySQL Dump
 # #########################################################
-MYSQL_SUCCESS=true
-echo -e "\e[38;5;237mStarting MySQL dump...\e[39m";
-mkdir -p "$SITE_ROOT"/"$SQL_DUMPS_DIR"
-cd "$SITE_ROOT"/"$SQL_DUMPS_DIR" || exit
-if [ "$VERBOSE" = true ]
-then
-    if ! (mysqldump -v -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" > "$MYSQL_DATABASE"-"$DATABASE_VERSION".sql)
-    then
-        MYSQL_SUCCESS=false
-    fi
-else
-    if ! (mysqldump -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" > "$MYSQL_DATABASE"-"$DATABASE_VERSION".sql)
-    then
-        MYSQL_SUCCESS=false
-    fi
-fi
-
-if [ "$MYSQL_SUCCESS" = true ]
-then
-    echo -e "\e[32mMySQL dump successful ✓\e[39m"
-else
-    echo -e "\e[31mMySQL dump failed ✗\e[39m";
-fi
+# shellcheck source=deployment-modules/mysqldump_functions.sh
+source "$SITE_ROOT"/deployment-modules/mysqldump_functions.sh
+mysql_dump_fn "$SITE_ROOT"/"$SQL_DUMPS_DIR" "$VERBOSE" "$MYSQL_HOST" "$MYSQL_USER" "$MYSQL_PASSWORD" "$MYSQL_DATABASE" "$DATABASE_VERSION"
 
 # #########################################################
 
@@ -369,6 +360,12 @@ then
 else
     echo -e "\e[31mdatabase sync failed ✗\e[39m"
 fi
+
+
+# #########################################################
+# END MODULES
+# #########################################################
+
 
 ln -sf ../assets .
 cp "$HTACCESS" ./.htaccess
