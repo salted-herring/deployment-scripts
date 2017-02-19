@@ -266,47 +266,12 @@ archive_site "$SITE_ROOT" "$HTDOCS_DIR" "$VERBOSE" "$VERSION_NAME" "$SQL_DUMPS_D
 source "$SITE_ROOT"/deployment-modules/sync_functions.sh
 sync_files "$SITE_ROOT" "$VERBOSE" "$HTDOCS_DIR" "$REPO_DIR"
 
+#
+# 7. Run sake
 # #########################################################
-# 6. Run sake
-# #########################################################
-cd "$SITE_ROOT"/"$HTDOCS_DIR" || exit
-SAKE_SUCCESS=true
-echo -e "\e[38;5;237mSynching the database...\e[39m"
-if [ "$VERBOSE" = true ]
-then
-    if [ "$MODE" == "full" ]
-    then
-        if ! (php framework/cli-script.php dev/build flush=all)
-        then
-            SAKE_SUCCESS=false
-        fi
-    else
-        if ! (php framework/cli-script.php dev/build)
-        then
-            SAKE_SUCCESS=false
-        fi
-    fi
-else
-    if [ "$MODE" == "full" ]
-    then
-        if ! (php framework/cli-script.php dev/build flush=all &>/dev/null)
-        then
-            SAKE_SUCCESS=false
-        fi
-    else
-        if ! (php framework/cli-script.php dev/build &>/dev/null)
-        then
-            SAKE_SUCCESS=false
-        fi
-    fi
-fi
-
-if [ "$SAKE_SUCCESS" = true ]
-then
-    echo -e "\e[32mdatabase sync successful ✓\e[39m"
-else
-    echo -e "\e[31mdatabase sync failed ✗\e[39m"
-fi
+# shellcheck source=deployment-modules/sake_functions.sh
+source "$SITE_ROOT"/deployment-modules/sake_functions.sh
+sake_build "$SITE_ROOT" "$HTDOCS_DIR" "$VERBOSE" "$MODE"
 
 
 # #########################################################
