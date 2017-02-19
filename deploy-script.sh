@@ -257,35 +257,14 @@ mysql_dump_fn "$SITE_ROOT"/"$SQL_DUMPS_DIR" "$VERBOSE" "$MYSQL_HOST" "$MYSQL_USE
 # #########################################################
 # shellcheck source=deployment-modules/archiving_functions.sh
 source "$SITE_ROOT"/deployment-modules/archiving_functions.sh
-archive_site
+archive_site "$SITE_ROOT" "$HTDOCS_DIR" "$VERBOSE" "$VERSION_NAME" "$SQL_DUMPS_DIR" "$MYSQL_DATABASE" "$DATABASE_VERSION" "$VERSIONS_DIR"
 
-# #########################################################
+#
 # 6. Sync repo & htdocs
 # #########################################################
-cd "$SITE_ROOT" || exit
-SYNC_SUCCESS=true
-echo -e "\e[38;5;237mSynching the repo & $HTDOCS_DIR...\e[39m"
-
-if [ "$VERBOSE" = true ]
-then
-    if ! (rsync -av --delete "$REPO_DIR"/ "$HTDOCS_DIR" --exclude .git* --exclude .gitignore --exclude .gitmodules --exclude readme.txt --exclude .htaccess --exclude robots.txt --exclude assets)
-    then
-        echo -e "\e[31mSynchronisation failed ✗\e[39m";
-        SYNC_SUCCESS=false
-    fi
-else
-    if ! (rsync -a --delete "$REPO_DIR"/ "$HTDOCS_DIR" --exclude .git* --exclude .gitignore --exclude .gitmodules --exclude readme.txt --exclude .htaccess --exclude robots.txt --exclude assets)
-    then
-        echo -e "\e[31mSynchronisation failed ✗\e[39m";
-        SYNC_SUCCESS=false
-    fi
-fi
-
-if [ "$SYNC_SUCCESS" = true ]
-then
-    echo -e "\e[32mSynchronisation successfully completed ✓\e[39m";
-fi
-
+# shellcheck source=deployment-modules/sync_functions.sh
+source "$SITE_ROOT"/deployment-modules/sync_functions.sh
+sync_files "$SITE_ROOT" "$VERBOSE" "$HTDOCS_DIR" "$REPO_DIR"
 
 # #########################################################
 # 6. Run sake

@@ -14,11 +14,11 @@ BOWER_SUCCESS=true
 # @arg siteroot - base dir of installation
 #
 function bower_update() {
-    MODE=$1
-    VERBOSE=$2
-    THEME=$3
-    THEMEDIR=$4
-    SITEROOT=$5
+    local MODE=$1
+    local VERBOSE=$2
+    local THEME=$3
+    local THEMEDIR=$4
+    local SITEROOT=$5
 
     if [ $MODE == "full" ]; then
         echo -e "\e[38;5;237mUpdating bower (please be patient - this may take some time)... ";

@@ -11,8 +11,8 @@ COMPOSER_SUCCESS=true
 # @arg verbose - show/hide output
 #
 function composer_update() {
-    mode=$1
-    verbose=$2
+    local mode=$1
+    local verbose=$2
 
     if [ "$mode" == "full" ]; then
         echo -e "\e[38;5;237mUpdating composer (please be patient - this may take some time)... ";

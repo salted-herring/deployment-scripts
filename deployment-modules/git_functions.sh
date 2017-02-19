@@ -30,9 +30,9 @@ function git_fail() {
 # @arg repo path - local path where the repo exists
 # @arg verbose - turn on/off output
 function git_fetch() {
-    branch=$1
-    path=$2
-    verbose=$3
+    local branch=$1
+    local path=$2
+    local verbose=$3
 
     echo -e "\e[38;5;237mGit attempting to pull from \e[1m$branch\e[22m..."
     cd $path
