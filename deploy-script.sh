@@ -267,11 +267,25 @@ source "$SITE_ROOT"/deployment-modules/sync_functions.sh
 sync_files "$SITE_ROOT" "$VERBOSE" "$HTDOCS_DIR" "$REPO_DIR"
 
 #
-# 7. Run sake
+# 7. Enable Maintenance Mode
+# #########################################################
+# shellcheck source=deployment-modules/maintenance_functions.sh
+source "$SITE_ROOT"/deployment-modules/maintenance_functions.sh
+maintenance_mode "$SITE_ROOT" "$HTDOCS_DIR" "$VERBOSE" on
+
+#
+# 8. Run sake
 # #########################################################
 # shellcheck source=deployment-modules/sake_functions.sh
 source "$SITE_ROOT"/deployment-modules/sake_functions.sh
 sake_build "$SITE_ROOT" "$HTDOCS_DIR" "$VERBOSE" "$MODE"
+
+#
+# 9. Disable Maintenance Mode
+# #########################################################
+# shellcheck source=deployment-modules/maintenance_functions.sh
+source "$SITE_ROOT"/deployment-modules/maintenance_functions.sh
+maintenance_mode "$SITE_ROOT" "$HTDOCS_DIR" "$VERBOSE" off
 
 
 # #########################################################
@@ -279,6 +293,10 @@ sake_build "$SITE_ROOT" "$HTDOCS_DIR" "$VERBOSE" "$MODE"
 # #########################################################
 
 
+
+# #########################################################
+# FINISH UP.
+# #########################################################
 ln -sf ../assets .
 cp "$HTACCESS" ./.htaccess
 cp "$ROBOTS" ./robots.txt
