@@ -58,6 +58,7 @@ VERBOSE=false
 CHOSEN_MODE=0
 CHOSEN_BRANCH=0
 CHOSEN_THEME=false
+CHOSEN_ENV=false
 
 read -d '' USAGE << END
 This script deploys SilverStripe based sites. It performs the following actions:
@@ -73,20 +74,22 @@ USAGE:
 
 ./deployscript.sh [options]
 
-  -v Verbose - log all output
-  -m Mode    - indicates whether we run bower & compser - 1 for "Lite" mode; 2 for "Full" mode
-  -b Branch  - the branch to deploy from
-  -h Help    - Display this help
-  -t Theme   - Theme to use when running bower
+  -v Verbose     - log all output
+  -m Mode        - indicates whether we run bower & compser - 1 for "Lite" mode; 2 for "Full" mode
+  -b Branch      - the branch to deploy from
+  -e Environment - The SilverStripe environment (e.g. "dev" or "live")
+  -h Help        - Display this help
+  -t Theme       - Theme to use when running bower
 
 END
 
-while getopts vm:t:b:h option
+while getopts vm:e:t:b:h option
 do
     case "${option}"
     in
         v) VERBOSE=true;;
         m) CHOSEN_MODE=${OPTARG};;
+        e) CHOSEN_ENV=${OPTARG};;
         t) CHOSEN_THEME=${OPTARG};;
         b) CHOSEN_BRANCH=${OPTARG};;
         h) echo -e "$USAGE \n"; exit;;
@@ -99,19 +102,26 @@ done
 SITE_ROOT=$(pwd)
 SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+# Can't execute this script inside the same directory as deploy-script.sh
+if [ "$SITE_ROOT" = "$SCRIPT_PATH" ]
+then
+    echo -e "\e[31mWARNING - you need to run this script from outside this directory.\e[39m"
+    exit
+fi
+
+APACHE_VERSION=2.4
 ASSETS_DIR="$SITE_ROOT/assets"
 DATABASE_VERSION=$(date "+%Y-%m-%d-%H_%M_%S")
 DEFAULT_BRANCH="master"
 DEFAULT_MODE="lite"
 DEFAULT_THEME="default"
-HTACCESS="$SITE_ROOT/htaccess"
+ENV="dev"
 HTDOCS_DIR="htdocs"
 MYSQL_HOST="localhost"
 MYSQL_USER="silverstripe"
 MYSQL_PASSWORD="nU3asT52uwUb"
 MYSQL_DATABASE="ss_wildeyes"
 REPO_DIR="repo"
-ROBOTS="$SITE_ROOT/robots.txt"
 SQL_DUMPS_DIR="sql-dumps"
 THEME_DIR="$SITE_ROOT/$REPO_DIR/themes"
 VERSIONS_DIR="versions"
@@ -188,6 +198,15 @@ if [[ -z "$branch" ]]; then
    branch=$DEFAULT_BRANCH
 else
    echo -e "\t• Deployment branch: \e[1m$branch\e[22m"
+fi
+
+#
+# CHeck the chosen environment.
+#
+if [ ! "$CHOSEN_ENV" = false ]
+then
+    ENV=$CHOSEN_ENV
+    echo -e "\t• Environment: \e[1m$CHOSEN_ENV\e[22m"
 fi
 
 #
@@ -300,8 +319,29 @@ maintenance_mode "$SITE_ROOT" "$HTDOCS_DIR" "$VERBOSE" off
 # FINISH UP.
 # #########################################################
 ln -sf ../assets .
-cp "$HTACCESS" ./.htaccess
-cp "$ROBOTS" ./robots.txt
+
+# Set up htaccess & robots based on env.
+if [ "$ENV" = "live" ]
+then
+    if [ "$APACHE_VERSION" = 2.4 ]
+    then
+        cp "$SCRIPT_PATH"/resources/apache-2.4/.live-htaccess "$SITE_ROOT"/"$HTDOCS_DIR"/.htaccess
+    else
+        cp "$SCRIPT_PATH"/resources/apache-2.2/.live-htaccess "$SITE_ROOT"/"$HTDOCS_DIR"/.htaccess
+    fi
+
+    cp "$SCRIPT_PATH"/resources/robots/live-robots.txt "$SITE_ROOT"/"$HTDOCS_DIR"/robots.txt
+else
+    if [ "$APACHE_VERSION" = 2.4 ]
+    then
+        cp "$SCRIPT_PATH"/resources/apache-2.4/.dev-htaccess "$SITE_ROOT"/"$HTDOCS_DIR"/.htaccess
+    else
+        cp "$SCRIPT_PATH"/resources/apache-2.2/.dev-htaccess "$SITE_ROOT"/"$HTDOCS_DIR"/.htaccess
+    fi
+
+    cp "$SCRIPT_PATH"/resources/robots/dev-robots.txt "$SITE_ROOT"/"$HTDOCS_DIR"/robots.txt
+fi
+
 cd "$SITE_ROOT" || exit
 
 endTime=$(date +%s)
