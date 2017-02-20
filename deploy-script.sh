@@ -1,4 +1,5 @@
 #!/bin/bash
+
 startTime=$(date +%s)
 echo -en "\e[34m"
 cat << EOF
@@ -96,6 +97,7 @@ done
 # Script vars. Set these up prior to running.
 #
 SITE_ROOT=$(pwd)
+SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 ASSETS_DIR="$SITE_ROOT/assets"
 DATABASE_VERSION=$(date "+%Y-%m-%d-%H_%M_%S")
@@ -227,28 +229,28 @@ echo -e "\n"
 # 1. Git fetch
 # #########################################################
 # shellcheck source=deployment-modules/git_functions.sh
-source "$SITE_ROOT"/deployment-modules/git_functions.sh
+source "$SCRIPT_PATH"/deployment-modules/git_functions.sh
 git_fetch "$branch" "$SITE_ROOT"/"$REPO_DIR" "$VERBOSE"
 
 #
 # 2. Composer Update
 # #########################################################
 # shellcheck source=deployment-modules/composer_functions.sh
-source "$SITE_ROOT"/deployment-modules/composer_functions.sh
+source "$SCRIPT_PATH"/deployment-modules/composer_functions.sh
 composer_update "$MODE" "$VERBOSE"
 
 #
 # 3. Bower Update
 # #########################################################
 # shellcheck source=deployment-modules/bower_functions.sh
-source "$SITE_ROOT"/deployment-modules/bower_functions.sh
+source "$SCRIPT_PATH"/deployment-modules/bower_functions.sh
 bower_update "$MODE" "$VERBOSE" "$CHOSEN_THEME" "$THEME_DIR" "$SITE_ROOT"
 
 #
 # 4. MySQL Dump
 # #########################################################
 # shellcheck source=deployment-modules/mysqldump_functions.sh
-source "$SITE_ROOT"/deployment-modules/mysqldump_functions.sh
+source "$SCRIPT_PATH"/deployment-modules/mysqldump_functions.sh
 mysql_dump_fn "$SITE_ROOT"/"$SQL_DUMPS_DIR" "$VERBOSE" "$MYSQL_HOST" "$MYSQL_USER" "$MYSQL_PASSWORD" "$MYSQL_DATABASE" "$DATABASE_VERSION" "$SITE_ROOT"
 
 
@@ -256,35 +258,35 @@ mysql_dump_fn "$SITE_ROOT"/"$SQL_DUMPS_DIR" "$VERBOSE" "$MYSQL_HOST" "$MYSQL_USE
 # 5. Archive old htdocs dir & sql dump
 # #########################################################
 # shellcheck source=deployment-modules/archiving_functions.sh
-source "$SITE_ROOT"/deployment-modules/archiving_functions.sh
+source "$SCRIPT_PATH"/deployment-modules/archiving_functions.sh
 archive_site "$SITE_ROOT" "$HTDOCS_DIR" "$VERBOSE" "$VERSION_NAME" "$SQL_DUMPS_DIR" "$MYSQL_DATABASE" "$DATABASE_VERSION" "$VERSIONS_DIR"
 
 #
 # 6. Sync repo & htdocs
 # #########################################################
 # shellcheck source=deployment-modules/sync_functions.sh
-source "$SITE_ROOT"/deployment-modules/sync_functions.sh
+source "$SCRIPT_PATH"/deployment-modules/sync_functions.sh
 sync_files "$SITE_ROOT" "$VERBOSE" "$HTDOCS_DIR" "$REPO_DIR"
 
 #
 # 7. Enable Maintenance Mode
 # #########################################################
 # shellcheck source=deployment-modules/maintenance_functions.sh
-source "$SITE_ROOT"/deployment-modules/maintenance_functions.sh
+source "$SCRIPT_PATH"/deployment-modules/maintenance_functions.sh
 maintenance_mode "$SITE_ROOT" "$HTDOCS_DIR" "$VERBOSE" on
 
 #
 # 8. Run sake
 # #########################################################
 # shellcheck source=deployment-modules/sake_functions.sh
-source "$SITE_ROOT"/deployment-modules/sake_functions.sh
+source "$SCRIPT_PATH"/deployment-modules/sake_functions.sh
 sake_build "$SITE_ROOT" "$HTDOCS_DIR" "$VERBOSE" "$MODE"
 
 #
 # 9. Disable Maintenance Mode
 # #########################################################
 # shellcheck source=deployment-modules/maintenance_functions.sh
-source "$SITE_ROOT"/deployment-modules/maintenance_functions.sh
+source "$SCRIPT_PATH"/deployment-modules/maintenance_functions.sh
 maintenance_mode "$SITE_ROOT" "$HTDOCS_DIR" "$VERBOSE" off
 
 
