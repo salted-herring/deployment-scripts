@@ -21,7 +21,7 @@ function bower_update() {
     local SITEROOT=$5
 
     if [ $MODE == "full" ]; then
-        echo -e "\e[38;5;237mUpdating bower (please be patient - this may take some time)... ";
+        log_message false "Updating bower (please be patient - this may take some time)..." "$MESSAGE_INFO";
 
         cd $THEMEDIR/$THEME;
 
@@ -30,19 +30,19 @@ function bower_update() {
             if ! (bower update)
             then
                 BOWER_SUCCESS=false
-                echo -e "\e[31mBower update failed ✗\e[39m";
+                log_message true "Bower update failed" "$MESSAGE_ERROR";
             fi
         else
             if ! (bower --quiet update &>/dev/null)
             then
                 BOWER_SUCCESS=false
-                echo -e "\e[31mBower update failed ✗\e[39m";
+                log_message true "Bower update failed" "$MESSAGE_ERROR";
             fi
         fi
 
         if [ "$BOWER_SUCCESS" = true ]
         then
-            echo -e "\e[32mBower successfully updated ✓\e[39m";
+            log_message true "Bower successfully updated" "$MESSAGE_SUCCESS";
         fi
 
         cd $SITEROOT;

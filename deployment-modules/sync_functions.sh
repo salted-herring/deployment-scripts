@@ -20,25 +20,25 @@ function sync_files() {
     local REPO_DIR=$4
 
     cd "$SITE_ROOT" || exit
-    echo -e "\e[38;5;237mSynching the repo & $HTDOCS_DIR...\e[39m"
+    log_message false "Synching the repo & $HTDOCS_DIR..." "$MESSAGE_INFO";
 
     if [ "$VERBOSE" = true ]
     then
         if ! (rsync -av --delete "$REPO_DIR"/ "$HTDOCS_DIR" --exclude .git* --exclude .gitignore --exclude .gitmodules --exclude readme.txt --exclude .htaccess --exclude robots.txt --exclude assets)
         then
-            echo -e "\e[31mSynchronisation failed ✗\e[39m";
+            log_message true "Synchronisation failed" "$MESSAGE_ERROR";
             SYNC_SUCCESS=false
         fi
     else
         if ! (rsync -a --delete "$REPO_DIR"/ "$HTDOCS_DIR" --exclude .git* --exclude .gitignore --exclude .gitmodules --exclude readme.txt --exclude .htaccess --exclude robots.txt --exclude assets)
         then
-            echo -e "\e[31mSynchronisation failed ✗\e[39m";
+            log_message true "Synchronisation failed" "$MESSAGE_ERROR";
             SYNC_SUCCESS=false
         fi
     fi
 
     if [ "$SYNC_SUCCESS" = true ]
     then
-        echo -e "\e[32mSynchronisation successfully completed ✓\e[39m";
+        log_message true "Synchronisation successfully completed" "$MESSAGE_SUCCESS";
     fi
 }

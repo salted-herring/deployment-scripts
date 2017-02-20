@@ -20,6 +20,9 @@ REPO_DIR="repo"
 SQL_DUMPS_DIR="sql-dumps"
 THEME_DIR="$SITE_ROOT/$REPO_DIR/themes"
 VERSIONS_DIR="versions"
+LOGGING_ENABLED=false
+LOGGING_DIRECTORY="."
+LOGGING_FILENAME="silverstripe.domain.deployment.log"
 
 # If a config file is passed in, override the arguments
 if [ ! "$CHOSEN_CONFIG" = false ]
@@ -42,6 +45,9 @@ then
     mysql_database_config=$(cat $CHOSEN_CONFIG | jq '. | .mysql.database_name' | tr -d '"')
     interactive_config=$(cat $CHOSEN_CONFIG | jq '. | .interactive' | tr -d '"')
     verbose_config=$(cat $CHOSEN_CONFIG | jq '. | .verbose' | tr -d '"')
+    logging_enabled=$(cat $CHOSEN_CONFIG | jq '. | .logging.enabled' | tr -d '"')
+    logging_dir=$(cat $CHOSEN_CONFIG | jq '. | .logging.directory' | tr -d '"')
+    logging_filename=$(cat $CHOSEN_CONFIG | jq '. | .logging.filename' | tr -d '"')
 
     # then assign to the parameters
     SITE_ROOT="$root_config"
@@ -61,12 +67,30 @@ then
     MYSQL_DATABASE="$mysql_database_config"
     INTERACTIVE="$interactive_config"
     VERBOSE="$verbose_config"
+    LOGGING_ENABLED="$logging_enabled"
+    LOGGING_DIRECTORY="$logging_dir"
+    LOGGING_FILENAME="$logging_filename"
 
     # Override cli arguments
     CHOSEN_MODE="$default_mode_config"
     CHOSEN_BRANCH="$default_branch_config"
     CHOSEN_ENV="$env_config"
     CHOSEN_THEME="$default_theme_config"
+
+
+    # logging
+    if [ "$LOGGING_ENABLED" = true ]
+    then
+        if [ ! -d "$LOGGING_DIRECTORY" ]
+        then
+            mkdir -p $LOGGING_DIRECTORY
+        fi
+
+        if [ ! -f "$LOGGING_DIRECTORY"/"$LOGGING_FILENAME" ]
+        then
+            touch "$LOGGING_DIRECTORY"/"$LOGGING_FILENAME"
+        fi
+    fi
 fi
 
 # Vars that possibly need to be re-evaluated after processing

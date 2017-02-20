@@ -15,25 +15,25 @@ function composer_update() {
     local verbose=$2
 
     if [ "$mode" == "full" ]; then
-        echo -e "\e[38;5;237mUpdating composer (please be patient - this may take some time)... ";
+        log_message false "Updating Composer (please be patient - this may take some time)..." "$MESSAGE_INFO";
         if [ "$verbose" = true ]
         then
             if ! (composer update)
             then
                 COMPOSER_SUCCESS=false
-                echo -e "\e[31mComposer update failed ✗\e[39m";
+                log_message true "Composer update failed" "$MESSAGE_ERROR";
             fi
         else
             if ! (composer --quiet update)
             then
                 COMPOSER_SUCCESS=false
-                echo -e "\e[31mComposer update failed ✗\e[39m";
+                log_message true "Composer update failed" "$MESSAGE_ERROR";
             fi
         fi
 
         if [ "$COMPOSER_SUCCESS" = true ]
         then
-            echo -e "\e[32mComposer successfully updated ✓\e[39m";
+            log_message true "Composer successfully update" "$MESSAGE_SUCCESS";
         fi
     fi
 }

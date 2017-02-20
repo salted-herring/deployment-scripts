@@ -27,7 +27,7 @@ function mysql_dump_fn() {
     local DATABASE_VERSION=$7
     local SITEROOT=$8
 
-    echo -e "\e[38;5;237mStarting MySQL dump...\e[39m";
+    log_message false "Starting MySQL dump..." "$MESSAGE_INFO";
     /bin/mkdir -p "$MYSQL_PATH"
     cd "$MYSQL_PATH" || exit
 
@@ -46,8 +46,8 @@ function mysql_dump_fn() {
 
     if [ "$MYSQL_SUCCESS" = true ]
     then
-        echo -e "\e[32mMySQL dump successful ✓\e[39m"
+        log_message true "MySQL dump successful" "$MESSAGE_SUCCESS";
     else
-        echo -e "\e[31mMySQL dump failed ✗\e[39m";
+        log_message true "MySQL dump failed" "$MESSAGE_ERROR";
     fi
 }

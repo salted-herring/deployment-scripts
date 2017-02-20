@@ -7,17 +7,17 @@ GIT_SUCCESS=true
 # ---------
 # If git fails, print appropriate error message & exit.
 #
-# @arg - branch name: name of the branch that failed
+# @arg - action: name of the action that failed - e.g. "pull branchname"
 #
 function git_fail() {
-    echo -e "\e[31mRepository retrieval failed ✗\e[39m";
+    log_message true "Repository retrieval failed" "$MESSAGE_ERROR";
 
     if ! [ -z "$1" ]
     then
-        echo -e "\e[31m$1 failed ✗\e[39m";
+        log_message true "$1 failed" "$MESSAGE_ERROR";
     fi
 
-    echo -e "\e[31mDeployment failed ✗\e[39m";
+    log_message true "$1 Deployment failed" "$MESSAGE_ERROR";
     exit 1
 }
 
@@ -34,7 +34,7 @@ function git_fetch() {
     local path=$2
     local verbose=$3
 
-    echo -e "\e[38;5;237mGit attempting to pull from \e[1m$branch\e[22m..."
+    log_message false "Git attempting to pull from \e[1m$branch\e[22m..." "$MESSAGE_INFO";
     cd $path
 
     if [ "$verbose" = true ]
@@ -69,7 +69,7 @@ function git_fetch() {
 
     if [ "$GIT_SUCCESS" = true ]
     then
-        echo -e "\e[32mGit successfully pulled from $branch branch ✓\e[39m";
+        log_message true "Git successfully pulled from $branch branch" "$MESSAGE_SUCCESS";
     else
         git_fail
     fi

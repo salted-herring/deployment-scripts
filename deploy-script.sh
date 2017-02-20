@@ -1,11 +1,19 @@
 #!/bin/bash
 
-startTime=$(date +%s)
+# ###########################################
+# deploy-script.sh
+# ----------------
+# deployment script for salted herring silverstripe sites.
+# Performs the following tasks:
+# 1. Backup current db.
+# 2. Checks out latest code.
+# 3. Backs up current site.
+# 4. Syncs with composer & bower
+# 5. Updates db with current state.
+# ###########################################
+
 echo -en "\e[34m"
 cat << EOF
-
-
-
 
                          :hh   dMs  -yo
                    \`.  \`NM/  /MN\`  hMs  .y/
@@ -36,33 +44,9 @@ EOF
 echo -e "\e[39mWelcome to the Salted Herring SilverStripe deploment system."
 echo -e "\e[39m--------------------------------------"
 
-# ###########################################
-# deploy-script.sh
-# ----------------
-# deployment script for salted herring silverstripe sites.
-# Performs the following tasks:
-# 1. Backup current db.
-# 2. Checks out latest code.
-# 3. Backs up current site.
-# 4. Syncs with composer & bower
-# 5. Updates db with current state.
-# ###########################################
-
-# ###########################################
-# Arguments:
-# ----------
-# The script accepts the following arguments:
-# --v, --verbose - show all output.
-# ###########################################
-VERBOSE=false
-CHOSEN_MODE=0
-CHOSEN_BRANCH=0
-CHOSEN_THEME=false
-CHOSEN_ENV=false
-CHOSEN_CONFIG=false
-CHOSEN_SITE_ROOT=false
-INTERACTIVE=true
-
+#
+# Usage output
+# ------------
 read -d '' USAGE << END
 This script deploys SilverStripe based sites. It performs the following actions:
 
@@ -88,6 +72,25 @@ USAGE:
   -c Config          - json file with default settings
 
 END
+
+
+#
+# Arguments:
+# ----------
+readonly startTime=$(date "+%s")
+readonly LOGGING_DATE=$(date "+%d-%m-%Y %H:%m:%S")
+readonly SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DATABASE_VERSION=$(date "+%Y-%m-%d-%H_%M_%S")
+
+INTERACTIVE=true
+VERBOSE=false
+
+CHOSEN_MODE=0
+CHOSEN_BRANCH=0
+CHOSEN_THEME=false
+CHOSEN_ENV=false
+CHOSEN_CONFIG=false
+CHOSEN_SITE_ROOT=false
 
 while getopts ic:vm:e:t:b:h: option
 do
@@ -115,9 +118,6 @@ function interactive() {
 #
 # Script vars. Set these up prior to running.
 #
-SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-DATABASE_VERSION=$(date "+%Y-%m-%d-%H_%M_%S")
-
 if [ ! "$CHOSEN_SITE_ROOT" = false ]
 then
     SITE_ROOT="$CHOSEN_SITE_ROOT"
@@ -125,16 +125,29 @@ else
     SITE_ROOT=$(pwd)
 fi
 
+# shellcheck source=deployment-modules/process_options.sh
+source "$SCRIPT_PATH"/deployment-modules/process_options.sh
 
 # Can't execute this script inside the same directory as deploy-script.sh
 if [ "$SITE_ROOT" = "$SCRIPT_PATH" ]
 then
-    echo -e "\e[31mWARNING - you need to run this script from outside this directory.\e[39m"
+    log_message true "WARNING - you need to run this script from outside this directory" "$MESSAGE_ERROR"
     exit
 fi
 
-# shellcheck source=deployment-modules/process_options.sh
-source "$SCRIPT_PATH"/deployment-modules/process_options.sh
+# #########################################################
+
+#
+# load logging
+# ------------
+
+# shellcheck source=deployment-modules/logging.sh
+source "$SCRIPT_PATH"/deployment-modules/logging.sh
+
+log_message true "Deployment started" "$MESSAGE_INFO" true;
+
+
+
 
 # #########################################################
 # Choose mode & branch
@@ -148,30 +161,30 @@ then
     read -p "" userchoice
 
     if [[ -z "$userchoice" ]]; then
-       echo -e "\t• Lite mode chosen"
+       echo -e "   • Lite mode chosen"
        MODE=$DEFAULT_MODE
     else
         case $userchoice in
-        1) echo -e "\t• Mode chosen: \e[1mLite\e[22m"
+        1) echo -e "   • Mode chosen: \e[1mLite\e[22m"
             MODE="lite"
             ;;
-        2) echo -e "\t• Mode chosen: \e[1mFull\e[22m"
+        2) echo -e "   • Mode chosen: \e[1mFull\e[22m"
             MODE="full"
             ;;
-        *) echo -e "\e[31mIncorrect mode chosen. Exiting ✗\e[39m"
+        *) log_message true "Incorrect mode ($userchoice) supplied" "$MESSAGE_ERROR";
             exit
             ;;
         esac
     fi
 else
     case $CHOSEN_MODE in
-    1) echo -e "\t• Mode chosen: \e[1mLite\e[22m"
+    1) echo -e "   • Mode chosen: \e[1mLite\e[22m"
         MODE="lite"
         ;;
-    2) echo -e "\t• Mode chosen: \e[1mFull\e[22m"
+    2) echo -e "   • Mode chosen: \e[1mFull\e[22m"
         MODE="full"
         ;;
-    *) echo -e "\e[31mIncorrect mode chosen. Exiting ✗\e[39m"
+    *) log_message true "Incorrect mode ($CHOSEN_MODE) supplied" "$MESSAGE_ERROR";
         exit
         ;;
     esac
@@ -192,17 +205,17 @@ fi
 cd "$SITE_ROOT/$REPO_DIR" || exit
 if ! (git rev-parse --verify "$branch" &>/dev/null)
 then
-    echo -e "\e[31mCan't find the $branch branch in the current repository. You may want to perform a git fetch before running this again. \e[39m"
+    log_message true "Can't find the $branch branch in the current repository. You may want to perform a git fetch before running this again." "$MESSAGE_ERROR";
     exit
 fi
 
 
 
 if [[ -z "$branch" ]]; then
-   echo -e "\t• Deployment branch: \e[1m$DEFAULT_BRANCH\e[22m"
+   echo -e "   • Deployment branch: \e[1m$DEFAULT_BRANCH\e[22m"
    branch=$DEFAULT_BRANCH
 else
-   echo -e "\t• Deployment branch: \e[1m$branch\e[22m"
+   echo -e "   • Deployment branch: \e[1m$branch\e[22m"
 fi
 
 #
@@ -211,7 +224,7 @@ fi
 if [ ! "$CHOSEN_ENV" = false ]
 then
     ENV=$CHOSEN_ENV
-    echo -e "\t• Environment: \e[1m$CHOSEN_ENV\e[22m"
+    echo -e "   • Environment: \e[1m$CHOSEN_ENV\e[22m"
 fi
 
 #
@@ -241,9 +254,9 @@ then
             CHOSEN_THEME=$theme
         fi
 
-        echo -e "\t• Chosen theme: \e[1m$CHOSEN_THEME\e[22m"
+        echo -e "   • Chosen theme: \e[1m$CHOSEN_THEME\e[22m"
     else
-        echo -e "\t• Chosen theme: \e[1m$CHOSEN_THEME\e[22m"
+        echo -e "   • Chosen theme: \e[1m$CHOSEN_THEME\e[22m"
     fi
 fi
 
@@ -354,6 +367,7 @@ if [ -d "$SITE_ROOT"/"$HTDOCS_DIR"/assets ]
 then
     rm -rf "$SITE_ROOT"/"$HTDOCS_DIR"/assets
 fi
+
 ln -sf ../assets .
 
 # Set up htaccess & robots based on env.
@@ -384,6 +398,6 @@ endTime=$(date +%s)
 executionTime=$((endTime-startTime))
 
 echo -e "-------------------------"
-echo -e "\xF0\x9F\x8D\xBA \e[38;5;74mDeployment successful!\e[39m"
-echo -e "\e[93mTime taken $executionTime seconds\e[39m"
+log_message true "Deployment successful!" "$MESSAGE_RESULT";
+log_message true "Time taken $executionTime seconds" "$MESSAGE_STATS";
 exit 0

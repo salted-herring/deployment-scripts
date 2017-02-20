@@ -20,7 +20,7 @@ function sake_build() {
     local MODE=$4
 
     cd "$SITE_ROOT"/"$HTDOCS_DIR" || exit
-    echo -e "\e[38;5;237mSynching the database...\e[39m"
+    log_message false "Synching the database..." "$MESSAGE_INFO";
 
     if [ "$VERBOSE" = true ]
     then
@@ -53,8 +53,8 @@ function sake_build() {
 
     if [ "$SAKE_SUCCESS" = true ]
     then
-        echo -e "\e[32mdatabase sync successful ✓\e[39m"
+        log_message true "Database sync successful" "$MESSAGE_SUCCESS";
     else
-        echo -e "\e[31mdatabase sync failed ✗\e[39m"
+        log_message true "Database sync failed" "$MESSAGE_ERROR";
     fi
 }

@@ -24,9 +24,9 @@ function maintenance_mode() {
 
     if [ ! -d "$SITE_ROOT"/"$HTDOCS_DIR"/maintenance-mode ]
     then
-        echo -e "\e[31mMaintenance module is not installed ✗\e[39m"
+        log_message true "Maintenance module is not installed" "$MESSAGE_ERROR";
     else
-        echo -e "\e[38;5;237mSetting maintenance mode: "$MODE"...\e[39m"
+        log_message false "Setting maintenance mode: "$MODE"..." "$MESSAGE_INFO";
 
         if [ "$VERBOSE" = true ]
         then
@@ -43,9 +43,9 @@ function maintenance_mode() {
 
         if [ "$MAINTENANCE_SUCCESS" = true ]
         then
-            echo -e "\e[32mMaintenance mode successfully changed ✓\e[39m"
+            log_message true "Maintenance mode successfully changed" "$MESSAGE_SUCCESS";
         else
-            echo -e "\e[31mMaintenance mode change failed ✗\e[39m"
+            log_message true "Maintenance mode change failed" "$MESSAGE_ERROR";
         fi
     fi
 }

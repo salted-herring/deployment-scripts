@@ -21,5 +21,10 @@
         "mode": 1,
         "branch": "master",
         "theme": "default"
+    },
+    "logging": {
+        "enabled": true,
+        "directory": "/var/www/silverstripe.domain/logs",
+        "filename": "silverstripe.domain.deployment.log"
     }
 }

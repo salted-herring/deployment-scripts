@@ -47,9 +47,10 @@ function archive_site() {
     then
         cd "$VERSIONS_DIR" || exit
         ln -sf "$(basename "$VERSION_NAME".tgz)" latest
-        echo -e "\e[32m$HTDOCS_DIR successfully archived ✓\e[39m";
+
+        log_message true "$HTDOCS_DIR successfully archived" "$MESSAGE_SUCCESS";
     else
-        echo -e "\e[31m$HTDOCS_DIR archiving failed ✗\e[39m";
+        log_message true "$HTDOCS_DIR archiving failed" "$MESSAGE_ERROR";
     fi
 
     # clean up sql
