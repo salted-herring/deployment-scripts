@@ -59,6 +59,7 @@ CHOSEN_MODE=0
 CHOSEN_BRANCH=0
 CHOSEN_THEME=false
 CHOSEN_ENV=false
+CHOSEN_CONFIG=false
 
 read -d '' USAGE << END
 This script deploys SilverStripe based sites. It performs the following actions:
@@ -80,13 +81,15 @@ USAGE:
   -e Environment - The SilverStripe environment (e.g. "dev" or "live")
   -h Help        - Display this help
   -t Theme       - Theme to use when running bower
+  -c Config      - json file with default settings
 
 END
 
-while getopts vm:e:t:b:h option
+while getopts c:vm:e:t:b:h: option
 do
     case "${option}"
     in
+        c) CHOSEN_CONFIG=${OPTARG};;
         v) VERBOSE=true;;
         m) CHOSEN_MODE=${OPTARG};;
         e) CHOSEN_ENV=${OPTARG};;
@@ -101,6 +104,9 @@ done
 #
 SITE_ROOT=$(pwd)
 SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+ASSETS_DIR="$SITE_ROOT/assets"
+DATABASE_VERSION=$(date "+%Y-%m-%d-%H_%M_%S")
+
 
 # Can't execute this script inside the same directory as deploy-script.sh
 if [ "$SITE_ROOT" = "$SCRIPT_PATH" ]
@@ -109,27 +115,8 @@ then
     exit
 fi
 
-APACHE_VERSION=2.4
-ASSETS_DIR="$SITE_ROOT/assets"
-DATABASE_VERSION=$(date "+%Y-%m-%d-%H_%M_%S")
-DEFAULT_BRANCH="master"
-DEFAULT_MODE="lite"
-DEFAULT_THEME="default"
-ENV="dev"
-HTDOCS_DIR="htdocs"
-MYSQL_HOST="localhost"
-MYSQL_USER="silverstripe"
-MYSQL_PASSWORD="nU3asT52uwUb"
-MYSQL_DATABASE="ss_wildeyes"
-REPO_DIR="repo"
-SQL_DUMPS_DIR="sql-dumps"
-THEME_DIR="$SITE_ROOT/$REPO_DIR/themes"
-VERSIONS_DIR="versions"
-VERSION_NAME=$SITE_ROOT/$VERSIONS_DIR/$(date "+%Y-%m-%d-%H_%M_%S")
-
-# ##########################################
-# YOU SHOULDN'T HAVE TO EDIT BELOW HERE.
-# ##########################################
+# shellcheck source=deployment-modules/process_options.sh
+source "$SCRIPT_PATH"/deployment-modules/process_options.sh
 
 # #########################################################
 # Choose mode & branch

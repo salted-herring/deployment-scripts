@@ -1,0 +1,22 @@
+{
+    "apache_version": 2.4,
+    "environment": "dev",
+    "mysql": {
+        "host": "localhost",
+        "database_name": "ss_deployment",
+        "username": "silverstripe",
+        "password": "password"
+    },
+    "paths": {
+        "htdocs": "htdocs",
+        "versions": "versions",
+        "repo": "repo",
+        "sql_dumps": "sql-dumps",
+        "themes": "themes"
+    },
+    "default": {
+        "mode": 1,
+        "branch": "master",
+        "theme": "default"
+    }
+}
