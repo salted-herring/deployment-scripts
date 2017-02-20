@@ -27,13 +27,15 @@ function bower_update() {
 
         if [ "$VERBOSE" = true ]
         then
+            echo 1
+            exit
             if ! (bower update)
             then
                 BOWER_SUCCESS=false
                 echo -e "\e[31mBower update failed ✗\e[39m";
             fi
         else
-            if ! (bower --quiet update)
+            if ! (bower --quiet update &>/dev/null)
             then
                 BOWER_SUCCESS=false
                 echo -e "\e[31mBower update failed ✗\e[39m";

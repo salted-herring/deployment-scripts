@@ -9,16 +9,17 @@ This script deploys SilverStripe based sites. It performs the following actions:
 
 ---
 ## USAGE
+
 `./deployscript.sh [options]`
 
--v Verbose         - log all output
--m Mode            - indicates whether we run bower & compser - 1 for "Lite"
-                               mode; 2 for "Full" mode
--b Branch           - the branch to deploy from
--e Environment - The SilverStripe environment (e.g. "dev" or "live")
--h Help               - Display this help
--t Theme            - Theme to use when running bower
--c Config            - json file with default settings
+ -v Verbose         - log all output
+ -m Mode            - indicates whether we run bower & composer - 1 for "Lite" mode; 2 for "Full" mode
+ -b Branch          - the branch to deploy from
+ -e Environment     - The SilverStripe environment (e.g. "dev" or "live")
+ -h Help            - Display this help
+ -i Non-interactive - Allow script to execute without waiting at each step.
+ -t Theme           - Theme to use when running bower
+ -c Config          - json file with default settings
 
 ---
 

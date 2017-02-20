@@ -60,6 +60,7 @@ CHOSEN_BRANCH=0
 CHOSEN_THEME=false
 CHOSEN_ENV=false
 CHOSEN_CONFIG=false
+INTERACTIVE=true
 
 read -d '' USAGE << END
 This script deploys SilverStripe based sites. It performs the following actions:
@@ -75,17 +76,18 @@ USAGE:
 
 ./deployscript.sh [options]
 
-  -v Verbose     - log all output
-  -m Mode        - indicates whether we run bower & compser - 1 for "Lite" mode; 2 for "Full" mode
-  -b Branch      - the branch to deploy from
-  -e Environment - The SilverStripe environment (e.g. "dev" or "live")
-  -h Help        - Display this help
-  -t Theme       - Theme to use when running bower
-  -c Config      - json file with default settings
+  -v Verbose         - log all output
+  -m Mode            - indicates whether we run bower & composer - 1 for "Lite" mode; 2 for "Full" mode
+  -b Branch          - the branch to deploy from
+  -e Environment     - The SilverStripe environment (e.g. "dev" or "live")
+  -h Help            - Display this help
+  -i Non-interactive - Allow script to execute without waiting at each step.
+  -t Theme           - Theme to use when running bower
+  -c Config          - json file with default settings
 
 END
 
-while getopts c:vm:e:t:b:h: option
+while getopts ic:vm:e:t:b:h: option
 do
     case "${option}"
     in
@@ -95,9 +97,17 @@ do
         e) CHOSEN_ENV=${OPTARG};;
         t) CHOSEN_THEME=${OPTARG};;
         b) CHOSEN_BRANCH=${OPTARG};;
+        i) INTERACTIVE=false;;
         h) echo -e "$USAGE \n"; exit;;
     esac
 done
+
+function interactive() {
+    if [ "$INTERACTIVE" = true ]
+    then
+        read -rsp $'Press any key to continue...\n' -n1 key
+    fi
+}
 
 #
 # Script vars. Set these up prior to running.
@@ -247,12 +257,16 @@ echo -e "\n"
 source "$SCRIPT_PATH"/deployment-modules/git_functions.sh
 git_fetch "$branch" "$SITE_ROOT"/"$REPO_DIR" "$VERBOSE"
 
+interactive
+
 #
 # 2. Composer Update
 # #########################################################
 # shellcheck source=deployment-modules/composer_functions.sh
 source "$SCRIPT_PATH"/deployment-modules/composer_functions.sh
 composer_update "$MODE" "$VERBOSE"
+
+interactive
 
 #
 # 3. Bower Update
@@ -261,12 +275,16 @@ composer_update "$MODE" "$VERBOSE"
 source "$SCRIPT_PATH"/deployment-modules/bower_functions.sh
 bower_update "$MODE" "$VERBOSE" "$CHOSEN_THEME" "$THEME_DIR" "$SITE_ROOT"
 
+interactive
+
 #
 # 4. MySQL Dump
 # #########################################################
 # shellcheck source=deployment-modules/mysqldump_functions.sh
 source "$SCRIPT_PATH"/deployment-modules/mysqldump_functions.sh
 mysql_dump_fn "$SITE_ROOT"/"$SQL_DUMPS_DIR" "$VERBOSE" "$MYSQL_HOST" "$MYSQL_USER" "$MYSQL_PASSWORD" "$MYSQL_DATABASE" "$DATABASE_VERSION" "$SITE_ROOT"
+
+interactive
 
 
 #
@@ -276,12 +294,16 @@ mysql_dump_fn "$SITE_ROOT"/"$SQL_DUMPS_DIR" "$VERBOSE" "$MYSQL_HOST" "$MYSQL_USE
 source "$SCRIPT_PATH"/deployment-modules/archiving_functions.sh
 archive_site "$SITE_ROOT" "$HTDOCS_DIR" "$VERBOSE" "$VERSION_NAME" "$SQL_DUMPS_DIR" "$MYSQL_DATABASE" "$DATABASE_VERSION" "$VERSIONS_DIR"
 
+interactive
+
 #
 # 6. Sync repo & htdocs
 # #########################################################
 # shellcheck source=deployment-modules/sync_functions.sh
 source "$SCRIPT_PATH"/deployment-modules/sync_functions.sh
 sync_files "$SITE_ROOT" "$VERBOSE" "$HTDOCS_DIR" "$REPO_DIR"
+
+interactive
 
 #
 # 7. Enable Maintenance Mode
@@ -290,6 +312,8 @@ sync_files "$SITE_ROOT" "$VERBOSE" "$HTDOCS_DIR" "$REPO_DIR"
 source "$SCRIPT_PATH"/deployment-modules/maintenance_functions.sh
 maintenance_mode "$SITE_ROOT" "$HTDOCS_DIR" "$VERBOSE" on
 
+interactive
+
 #
 # 8. Run sake
 # #########################################################
@@ -297,12 +321,16 @@ maintenance_mode "$SITE_ROOT" "$HTDOCS_DIR" "$VERBOSE" on
 source "$SCRIPT_PATH"/deployment-modules/sake_functions.sh
 sake_build "$SITE_ROOT" "$HTDOCS_DIR" "$VERBOSE" "$MODE"
 
+interactive
+
 #
 # 9. Disable Maintenance Mode
 # #########################################################
 # shellcheck source=deployment-modules/maintenance_functions.sh
 source "$SCRIPT_PATH"/deployment-modules/maintenance_functions.sh
 maintenance_mode "$SITE_ROOT" "$HTDOCS_DIR" "$VERBOSE" off
+
+interactive
 
 
 # #########################################################
