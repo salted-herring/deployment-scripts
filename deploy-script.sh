@@ -201,13 +201,22 @@ else
 fi
 
 #
-# CHeck the chosen environment.
+# Check the chosen environment.
 #
 if [ ! "$CHOSEN_ENV" = false ]
 then
     ENV=$CHOSEN_ENV
     echo -e "\t• Environment: \e[1m$CHOSEN_ENV\e[22m"
 fi
+
+#
+# Check to see if the versions directory exists
+#
+if [ ! -d $SITE_ROOT/$VERSIONS_DIR ]
+then
+    mkdir -p $SITE_ROOT/$VERSIONS_DIR
+fi
+
 
 #
 # If the chosen mode is full - then ask for the theme directory to
@@ -318,6 +327,10 @@ maintenance_mode "$SITE_ROOT" "$HTDOCS_DIR" "$VERBOSE" off
 # #########################################################
 # FINISH UP.
 # #########################################################
+if [ -d "$SITE_ROOT"/"$HTDOCS_DIR"/assets ]
+then
+    rm -rf "$SITE_ROOT"/"$HTDOCS_DIR"/assets
+fi
 ln -sf ../assets .
 
 # Set up htaccess & robots based on env.
