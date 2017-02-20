@@ -12,6 +12,7 @@ This script deploys SilverStripe based sites. It performs the following actions:
 
 `./deployscript.sh [options]`
 
+ -S Site Root       - Path to the root (parent of the public directory) of the site.
  -v Verbose         - log all output
  -m Mode            - indicates whether we run bower & composer - 1 for "Lite" mode; 2 for "Full" mode
  -b Branch          - the branch to deploy from
@@ -20,6 +21,9 @@ This script deploys SilverStripe based sites. It performs the following actions:
  -i Non-interactive - Allow script to execute without waiting at each step.
  -t Theme           - Theme to use when running bower
  -c Config          - json file with default settings
+
+Using a config file overrides all settings.
+Asking for the help prints out the description & usage & exits.
 
 ---
 
@@ -53,6 +57,8 @@ The options that are passed into the CLI, may also be provided by an optional is
 {
     "apache_version": 2.4,
     "environment": "dev",
+    "interactive": "true",
+    "root": "/var/www/silverstripe.domain",
     "mysql": {
         "host": "localhost",
         "database_name": "ss_deployment",
@@ -75,3 +81,4 @@ The options that are passed into the CLI, may also be provided by an optional is
 ```
 
 *apache_version* - a simple string indicating the major release (i.e. 2.4 not 2.4.7)
+*root* - root directory of the site (parent level of public directory - e.g. /var/www/hostname - not /var/www/hostname/htdocs). Ensure there is no trailing slash

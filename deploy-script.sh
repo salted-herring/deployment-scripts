@@ -60,6 +60,7 @@ CHOSEN_BRANCH=0
 CHOSEN_THEME=false
 CHOSEN_ENV=false
 CHOSEN_CONFIG=false
+CHOSEN_SITE_ROOT=false
 INTERACTIVE=true
 
 read -d '' USAGE << END
@@ -76,6 +77,7 @@ USAGE:
 
 ./deployscript.sh [options]
 
+  -S Site Root       - Path to the root (parent of the public directory) of the site.
   -v Verbose         - log all output
   -m Mode            - indicates whether we run bower & composer - 1 for "Lite" mode; 2 for "Full" mode
   -b Branch          - the branch to deploy from
@@ -91,6 +93,7 @@ while getopts ic:vm:e:t:b:h: option
 do
     case "${option}"
     in
+        S) CHOSEN_SITE_ROOT=${OPTARG};;
         c) CHOSEN_CONFIG=${OPTARG};;
         v) VERBOSE=true;;
         m) CHOSEN_MODE=${OPTARG};;
@@ -112,10 +115,15 @@ function interactive() {
 #
 # Script vars. Set these up prior to running.
 #
-SITE_ROOT=$(pwd)
 SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-ASSETS_DIR="$SITE_ROOT/assets"
 DATABASE_VERSION=$(date "+%Y-%m-%d-%H_%M_%S")
+
+if [ ! "$CHOSEN_SITE_ROOT" = false ]
+then
+    SITE_ROOT="$CHOSEN_SITE_ROOT"
+else
+    SITE_ROOT=$(pwd)
+fi
 
 
 # Can't execute this script inside the same directory as deploy-script.sh

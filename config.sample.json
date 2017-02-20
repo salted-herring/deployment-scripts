@@ -1,6 +1,9 @@
 {
     "apache_version": 2.4,
     "environment": "dev",
+    "interactive": "true",
+    "verbose": false,
+    "root": "/var/www/silverstripe.domain/",
     "mysql": {
         "host": "localhost",
         "database_name": "ss_deployment",

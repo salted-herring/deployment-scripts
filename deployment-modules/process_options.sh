@@ -3,7 +3,7 @@
 #
 # PROCESS OPTIONS:
 # ----------------
-# Process the options passed into the script. 
+# Process the options passed into the script.
 
 # Defaults
 APACHE_VERSION=2.4
@@ -25,6 +25,7 @@ VERSIONS_DIR="versions"
 if [ ! "$CHOSEN_CONFIG" = false ]
 then
     # first, extract the config values
+    root_config=$(cat $CHOSEN_CONFIG | jq '. | .root' | tr -d '"')
     env_config=$(cat $CHOSEN_CONFIG | jq '. | .environment' | tr -d '"')
     apache_config=$(cat $CHOSEN_CONFIG | jq '. | .apache_version')
     default_branch_config=$(cat $CHOSEN_CONFIG | jq '. | .default.branch' | tr -d '"')
@@ -39,8 +40,11 @@ then
     mysql_user_config=$(cat $CHOSEN_CONFIG | jq '. | .mysql.username' | tr -d '"')
     mysql_password_config=$(cat $CHOSEN_CONFIG | jq '. | .mysql.password' | tr -d '"')
     mysql_database_config=$(cat $CHOSEN_CONFIG | jq '. | .mysql.database_name' | tr -d '"')
+    interactive_config=$(cat $CHOSEN_CONFIG | jq '. | .interactive' | tr -d '"')
+    verbose_config=$(cat $CHOSEN_CONFIG | jq '. | .verbose' | tr -d '"')
 
     # then assign to the parameters
+    SITE_ROOT="$root_config"
     ENV="$env_config"
     APACHE_VERSION="$apache_config"
     DEFAULT_BRANCH="$default_branch_config"
@@ -55,6 +59,8 @@ then
     MYSQL_USER="$mysql_user_config"
     MYSQL_PASSWORD="$mysql_password_config"
     MYSQL_DATABASE="$mysql_database_config"
+    INTERACTIVE="$interactive_config"
+    VERBOSE="$verbose_config"
 
     # Override cli arguments
     CHOSEN_MODE="$default_mode_config"
@@ -63,4 +69,6 @@ then
     CHOSEN_THEME="$default_theme_config"
 fi
 
+# Vars that possibly need to be re-evaluated after processing
+ASSETS_DIR="$SITE_ROOT/assets"
 VERSION_NAME=$SITE_ROOT/$VERSIONS_DIR/$(date "+%Y-%m-%d-%H_%M_%S")

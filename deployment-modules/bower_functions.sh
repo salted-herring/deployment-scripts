@@ -27,8 +27,6 @@ function bower_update() {
 
         if [ "$VERBOSE" = true ]
         then
-            echo 1
-            exit
             if ! (bower update)
             then
                 BOWER_SUCCESS=false
