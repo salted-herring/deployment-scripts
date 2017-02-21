@@ -1,22 +1,22 @@
 #!/bin/bash
 
-COMPOSER_SUCCESS=true
-
 #
 # composer_update:
 # ----------------
 # Update composer
 #
+# assumes MODE & VERBOSE are available
+#
 # @arg mode - whether we run in lite or full mode
 # @arg verbose - show/hide output
 #
 function composer_update() {
-    local mode=$1
-    local verbose=$2
+    COMPOSER_SUCCESS=true
 
-    if [ "$mode" == "full" ]; then
+    if [ "$MODE" == "full" ]; then
         log_message false "Updating Composer (please be patient - this may take some time)..." "$MESSAGE_INFO";
-        if [ "$verbose" = true ]
+
+        if [ "$VERBOSE" = true ]
         then
             if ! (composer update)
             then

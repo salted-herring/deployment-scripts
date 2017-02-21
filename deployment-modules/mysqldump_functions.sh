@@ -5,40 +5,31 @@
 # -------------
 # MySQL dump
 #
-# @arg path - where the sql dump is stored (temporarily)
-# @arg verbose - show/hide output
-# @arg mysql_host
-# @arg mysql_user
-# @arg mysql_password
-# @arg mysql_database
-# @arg database_version - a unique string to identify the dump (likely a timestamp)
-# @arg siteroot - bash path to reurn to.
+# assumes SITE_ROOT, SQL_DUMPS_DIR, VERBOSE, MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD & MYSQL_DATABASE are available
+#
+# @arg backup_path - where the sql dump is stored (temporarily)
+# @arg backup_version - a unique string to identify the dump (likely a timestamp)
 #
 
-MYSQL_SUCCESS=true
+
 
 function mysql_dump_fn() {
-    local MYSQL_PATH=$1
-    local VERBOSE=$2
-    local MYSQL_HOST=$3
-    local MYSQL_USER=$4
-    local MYSQL_PASSWORD=$5
-    local MYSQL_DATABASE=$6
-    local DATABASE_VERSION=$7
-    local SITEROOT=$8
+    local backup_version=$1
+
+    MYSQL_SUCCESS=true
 
     log_message false "Starting MySQL dump..." "$MESSAGE_INFO";
-    /bin/mkdir -p "$MYSQL_PATH"
-    cd "$MYSQL_PATH" || exit
+    /bin/mkdir -p "$SITE_ROOT"/"$SQL_DUMPS_DIR"
+    cd "$SITE_ROOT"/"$SQL_DUMPS_DIR" || exit
 
     if [ "$VERBOSE" = true ]
     then
-        if ! (/usr/bin/mysqldump -v -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" > "$MYSQL_DATABASE"-"$DATABASE_VERSION".sql)
+        if ! (mysqldump -v -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" > "$MYSQL_DATABASE"-"$backup_version".sql)
         then
             MYSQL_SUCCESS=false
         fi
     else
-        if ! (/usr/bin/mysqldump -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" > "$MYSQL_DATABASE"-"$DATABASE_VERSION".sql)
+        if ! (mysqldump -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" > "$MYSQL_DATABASE"-"$backup_version".sql)
         then
             MYSQL_SUCCESS=false
         fi

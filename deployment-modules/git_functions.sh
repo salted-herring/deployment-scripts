@@ -1,7 +1,5 @@
 #!/bin/bash
 
-GIT_SUCCESS=true
-
 #
 # git_fail:
 # ---------
@@ -26,18 +24,20 @@ function git_fail() {
 # ---------
 # Fetch & Pull the git repo
 #
+# assumes SITE_ROOT, REPO_DIR & VERBOSE are available
+#
 # @arg branch - branch to pull
 # @arg repo path - local path where the repo exists
 # @arg verbose - turn on/off output
 function git_fetch() {
     local branch=$1
-    local path=$2
-    local verbose=$3
+
+    GIT_SUCCESS=true
 
     log_message false "Git attempting to pull from \e[1m$branch\e[22m..." "$MESSAGE_INFO";
-    cd $path
+    cd "$SITE_ROOT"/"$REPO_DIR"
 
-    if [ "$verbose" = true ]
+    if [ "$VERBOSE" = true ]
     then
         if ! (git fetch --all)
         then

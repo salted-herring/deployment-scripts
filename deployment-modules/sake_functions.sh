@@ -1,11 +1,11 @@
 #!/bin/bash
 
-SAKE_SUCCESS=true
-
 #
 # sake_build:
 # -----------
 # Run sake build
+#
+# assumes SITE_ROOT, HTDOCS_DIR, VERBOSE & MODE are available
 #
 # @arg siteroot - base dir of installation
 # @arg htdocsdir - public html directory
@@ -14,10 +14,7 @@ SAKE_SUCCESS=true
 #
 
 function sake_build() {
-    local SITE_ROOT=$1
-    local HTDOCS_DIR=$2
-    local VERBOSE=$3
-    local MODE=$4
+    SAKE_SUCCESS=true
 
     cd "$SITE_ROOT"/"$HTDOCS_DIR" || exit
     log_message false "Synching the database..." "$MESSAGE_INFO";

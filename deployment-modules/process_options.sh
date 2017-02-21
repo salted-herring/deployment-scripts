@@ -95,4 +95,4 @@ fi
 
 # Vars that possibly need to be re-evaluated after processing
 ASSETS_DIR="$SITE_ROOT/assets"
-VERSION_NAME=$SITE_ROOT/$VERSIONS_DIR/$(date "+%Y-%m-%d-%H_%M_%S")
+VERSION_NAME="$SITE_ROOT"/"$VERSIONS_DIR"/"$DATABASE_VERSION"

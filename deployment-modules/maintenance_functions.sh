@@ -1,24 +1,20 @@
 #!/bin/bash
 
-MAINTENANCE_SUCCESS=true
-
 #
 # maintenance_mode:
 # -----------------
 # If the SilverStripe module "maintenance-mode" exists in the htdocs folder,
 # we will either put the site into maintenance mode or turn it off.
 #
-# @arg siteroot - base dir of installation
-# @arg htdocsdir - public html directory
-# @arg verbose - show/hide output
+# assumes SITE_ROOT, HTDOCS_DIR, & VERBOSE are available
+#
 # @arg mode - "on" or "off"
 #
 
 function maintenance_mode() {
-    local SITE_ROOT=$1
-    local HTDOCS_DIR=$2
-    local VERBOSE=$3
-    local MODE=$4
+    local mode=$1
+
+    MAINTENANCE_SUCCESS=true
 
     cd "$SITE_ROOT"/"$HTDOCS_DIR" || exit
 
@@ -30,12 +26,12 @@ function maintenance_mode() {
 
         if [ "$VERBOSE" = true ]
         then
-            if ! (php framework/cli-script.php dev/tasks/MaintenanceMode "$MODE")
+            if ! (php framework/cli-script.php dev/tasks/MaintenanceMode "$mode")
             then
                 MAINTENANCE_SUCCESS=false
             fi
         else
-            if ! (php framework/cli-script.php dev/tasks/MaintenanceMode "$MODE" &>/dev/null)
+            if ! (php framework/cli-script.php dev/tasks/MaintenanceMode "$mode" &>/dev/null)
             then
                 MAINTENANCE_SUCCESS=false
             fi

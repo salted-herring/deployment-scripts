@@ -79,8 +79,8 @@ END
 # ----------
 readonly startTime=$(date "+%s")
 readonly LOGGING_DATE=$(date "+%d-%m-%Y %H:%m:%S")
-readonly SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-DATABASE_VERSION=$(date "+%Y-%m-%d-%H_%M_%S")
+readonly SCRIPT_PATH="$(dirname "$(readlink -f "$0")")"
+readonly DATABASE_VERSION=$(date "+%Y-%m-%d-%H_%M_%S")
 
 INTERACTIVE=true
 VERBOSE=false
@@ -108,12 +108,7 @@ do
     esac
 done
 
-function interactive() {
-    if [ "$INTERACTIVE" = true ]
-    then
-        read -rsp $'Press any key to continue...\n' -n1 key
-    fi
-}
+
 
 #
 # Script vars. Set these up prior to running.
@@ -125,10 +120,15 @@ else
     SITE_ROOT=$(pwd)
 fi
 
+#
+# Process options:
+# ----------------
+
 # shellcheck source=deployment-modules/process_options.sh
 source "$SCRIPT_PATH"/deployment-modules/process_options.sh
 
-# Can't execute this script inside the same directory as deploy-script.sh
+
+# Don't execute this script inside the same directory as deploy-script.sh
 if [ "$SITE_ROOT" = "$SCRIPT_PATH" ]
 then
     log_message true "WARNING - you need to run this script from outside this directory" "$MESSAGE_ERROR"
@@ -138,11 +138,40 @@ fi
 # #########################################################
 
 #
-# load logging
-# ------------
+# Load modules:
+# -------------
+
+# shellcheck source=deployment-modules/utilities.sh
+source "$SCRIPT_PATH"/deployment-modules/utilities.sh
+
+# shellcheck source=deployment-modules/archiving_functions.sh
+source "$SCRIPT_PATH"/deployment-modules/archiving_functions.sh
+
+# shellcheck source=deployment-modules/bower_functions.sh
+source "$SCRIPT_PATH"/deployment-modules/bower_functions.sh
+
+# shellcheck source=deployment-modules/composer_functions.sh
+source "$SCRIPT_PATH"/deployment-modules/composer_functions.sh
+
+# shellcheck source=deployment-modules/git_functions.sh
+source "$SCRIPT_PATH"/deployment-modules/git_functions.sh
 
 # shellcheck source=deployment-modules/logging.sh
 source "$SCRIPT_PATH"/deployment-modules/logging.sh
+
+# shellcheck source=deployment-modules/maintenance_functions.sh
+source "$SCRIPT_PATH"/deployment-modules/maintenance_functions.sh
+
+# shellcheck source=deployment-modules/mysqldump_functions.sh
+source "$SCRIPT_PATH"/deployment-modules/mysqldump_functions.sh
+
+# shellcheck source=deployment-modules/sake_functions.sh
+source "$SCRIPT_PATH"/deployment-modules/sake_functions.sh
+
+# shellcheck source=deployment-modules/sync_functions.sh
+source "$SCRIPT_PATH"/deployment-modules/sync_functions.sh
+
+# #########################################################
 
 log_message true "Deployment started" "$MESSAGE_INFO" true;
 
@@ -260,8 +289,7 @@ then
     fi
 fi
 
-echo -e "\n"
-
+echo -e "\e[39m--------------------------------------"
 
 # #########################################################
 # MODULES
@@ -269,88 +297,59 @@ echo -e "\n"
 # Load & run all available modules.
 # #########################################################
 
-
-
 #
 # 1. Git fetch
-# #########################################################
-# shellcheck source=deployment-modules/git_functions.sh
-source "$SCRIPT_PATH"/deployment-modules/git_functions.sh
-git_fetch "$branch" "$SITE_ROOT"/"$REPO_DIR" "$VERBOSE"
-
+# ------------
+git_fetch "$branch"
 interactive
 
 #
 # 2. Composer Update
-# #########################################################
-# shellcheck source=deployment-modules/composer_functions.sh
-source "$SCRIPT_PATH"/deployment-modules/composer_functions.sh
-composer_update "$MODE" "$VERBOSE"
-
+# ------------------
+composer_update
 interactive
 
 #
 # 3. Bower Update
-# #########################################################
-# shellcheck source=deployment-modules/bower_functions.sh
-source "$SCRIPT_PATH"/deployment-modules/bower_functions.sh
-bower_update "$MODE" "$VERBOSE" "$CHOSEN_THEME" "$THEME_DIR" "$SITE_ROOT"
-
+# ---------------
+bower_update
 interactive
 
 #
 # 4. MySQL Dump
-# #########################################################
-# shellcheck source=deployment-modules/mysqldump_functions.sh
-source "$SCRIPT_PATH"/deployment-modules/mysqldump_functions.sh
-mysql_dump_fn "$SITE_ROOT"/"$SQL_DUMPS_DIR" "$VERBOSE" "$MYSQL_HOST" "$MYSQL_USER" "$MYSQL_PASSWORD" "$MYSQL_DATABASE" "$DATABASE_VERSION" "$SITE_ROOT"
-
+# -------------
+mysql_dump_fn "$DATABASE_VERSION"
 interactive
 
 
 #
 # 5. Archive old htdocs dir & sql dump
-# #########################################################
-# shellcheck source=deployment-modules/archiving_functions.sh
-source "$SCRIPT_PATH"/deployment-modules/archiving_functions.sh
-archive_site "$SITE_ROOT" "$HTDOCS_DIR" "$VERBOSE" "$VERSION_NAME" "$SQL_DUMPS_DIR" "$MYSQL_DATABASE" "$DATABASE_VERSION" "$VERSIONS_DIR"
-
+# ------------------------------------
+archive_site "$DATABASE_VERSION"
 interactive
 
 #
 # 6. Sync repo & htdocs
-# #########################################################
-# shellcheck source=deployment-modules/sync_functions.sh
-source "$SCRIPT_PATH"/deployment-modules/sync_functions.sh
-sync_files "$SITE_ROOT" "$VERBOSE" "$HTDOCS_DIR" "$REPO_DIR"
-
+# ---------------------
+sync_files
 interactive
 
 #
 # 7. Enable Maintenance Mode
-# #########################################################
-# shellcheck source=deployment-modules/maintenance_functions.sh
-source "$SCRIPT_PATH"/deployment-modules/maintenance_functions.sh
-maintenance_mode "$SITE_ROOT" "$HTDOCS_DIR" "$VERBOSE" on
-
+# --------------------------
+maintenance_mode on
 interactive
 
 #
 # 8. Run sake
-# #########################################################
-# shellcheck source=deployment-modules/sake_functions.sh
-source "$SCRIPT_PATH"/deployment-modules/sake_functions.sh
-sake_build "$SITE_ROOT" "$HTDOCS_DIR" "$VERBOSE" "$MODE"
-
+# -----------
+sake_build
 interactive
 
 #
 # 9. Disable Maintenance Mode
-# #########################################################
-# shellcheck source=deployment-modules/maintenance_functions.sh
-source "$SCRIPT_PATH"/deployment-modules/maintenance_functions.sh
-maintenance_mode "$SITE_ROOT" "$HTDOCS_DIR" "$VERBOSE" off
-
+# ---------------------------
+maintenance_mode off
 interactive
 
 

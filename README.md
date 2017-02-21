@@ -80,5 +80,5 @@ The options that are passed into the CLI, may also be provided by an optional is
 }
 ```
 
-*apache_version* - a simple string indicating the major release (i.e. 2.4 not 2.4.7)
+*apache_version* - a simple string indicating the major release (i.e. 2.4 not 2.4.7)  
 *root* - root directory of the site (parent level of public directory - e.g. /var/www/hostname - not /var/www/hostname/htdocs). Ensure there is no trailing slash

@@ -1,29 +1,20 @@
 #!/bin/bash
 
-BOWER_SUCCESS=true
-
 #
 # bower_update:
 # -------------
 # Bower update
 #
-# @arg mode - whether we run in lite or full mode
-# @arg verbose - show/hide output
-# @arg theme - theme to run bower inside
-# @arg themedir - base theme directory
-# @arg siteroot - base dir of installation
+# assumes MODE, VERBOSE, CHOSEN_THEME, THEME_DIR & SITE_ROOT are available
+#
 #
 function bower_update() {
-    local MODE=$1
-    local VERBOSE=$2
-    local THEME=$3
-    local THEMEDIR=$4
-    local SITEROOT=$5
+    BOWER_SUCCESS=true
 
     if [ $MODE == "full" ]; then
         log_message false "Updating bower (please be patient - this may take some time)..." "$MESSAGE_INFO";
 
-        cd $THEMEDIR/$THEME;
+        cd $THEME_DIR/$CHOSEN_THEME;
 
         if [ "$VERBOSE" = true ]
         then
@@ -45,6 +36,6 @@ function bower_update() {
             log_message true "Bower successfully updated" "$MESSAGE_SUCCESS";
         fi
 
-        cd $SITEROOT;
+        cd $SITE_ROOT;
     fi
 }

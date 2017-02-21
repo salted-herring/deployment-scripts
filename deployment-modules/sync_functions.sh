@@ -1,11 +1,13 @@
 #!/bin/bash
 
-SYNC_SUCCESS=true
+
 
 #
 # sync_files:
 # -------------
 # Syncs all files from the repository to the live site
+#
+# assumes SITE_ROOT, HTDOCS_DIR, VERBOSE, REPO_DIR & are available
 #
 # @arg siteroot - base dir of installation
 # @arg verbose - show/hide output
@@ -14,10 +16,8 @@ SYNC_SUCCESS=true
 #
 
 function sync_files() {
-    local SITE_ROOT=$1
-    local VERBOSE=$2
-    local HTDOCS_DIR=$3
-    local REPO_DIR=$4
+
+    SYNC_SUCCESS=true
 
     cd "$SITE_ROOT" || exit
     log_message false "Synching the repo & $HTDOCS_DIR..." "$MESSAGE_INFO";
