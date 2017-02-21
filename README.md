@@ -82,3 +82,16 @@ The options that are passed into the CLI, may also be provided by an optional is
 
 *apache_version* - a simple string indicating the major release (i.e. 2.4 not 2.4.7)  
 *root* - root directory of the site (parent level of public directory - e.g. /var/www/hostname - not /var/www/hostname/htdocs). Ensure there is no trailing slash
+
+## INSTALLATION
+
+### UBUNTU
+The recommended way to install this is the following:
+
+```sh
+cd /user/lcoal/bin
+git clone git@github.com:salted-herring/deployment-scripts.git ss-deployment
+ln -s ss-deployment/deployment-script.sh ssdeploy
+```
+
+You should then be able to run this whereever you want - e.g. `ssdeploy -c ./jsonpath`
