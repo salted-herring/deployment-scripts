@@ -24,13 +24,13 @@ function sync_files() {
 
     if [ "$VERBOSE" = true ]
     then
-        if ! (rsync -av --force --delete "$REPO_DIR"/ "$HTDOCS_DIR" --exclude .git* --exclude .gitignore --exclude .gitmodules --exclude readme.txt --exclude .htaccess --exclude robots.txt --exclude assets)
+        if ! (rsync -av --force --delete-excluded --delete "$REPO_DIR"/ "$HTDOCS_DIR" --exclude .git* --exclude .gitignore --exclude .gitmodules --exclude readme.txt --exclude .htaccess --exclude robots.txt --exclude assets)
         then
             log_message true "Synchronisation failed" "$MESSAGE_ERROR";
             SYNC_SUCCESS=false
         fi
     else
-        if ! (rsync -a --force --delete "$REPO_DIR"/ "$HTDOCS_DIR" --exclude .git* --exclude .gitignore --exclude .gitmodules --exclude readme.txt --exclude .htaccess --exclude robots.txt --exclude assets)
+        if ! (rsync -a --force --delete-excluded --delete "$REPO_DIR"/ "$HTDOCS_DIR" --exclude .git* --exclude .gitignore --exclude .gitmodules --exclude readme.txt --exclude .htaccess --exclude robots.txt --exclude assets)
         then
             log_message true "Synchronisation failed" "$MESSAGE_ERROR";
             SYNC_SUCCESS=false
