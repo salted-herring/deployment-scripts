@@ -11,7 +11,8 @@
 function bower_update() {
     BOWER_SUCCESS=true
 
-    if [ $MODE == "full" ]; then
+    if [ $MODE == "full" ] && [ "$BOWER" = true ]
+    then
         log_message false "Updating bower (please be patient - this may take some time)..." "$MESSAGE_INFO";
 
         cd $THEME_DIR/$CHOSEN_THEME;

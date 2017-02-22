@@ -26,5 +26,9 @@
         "enabled": true,
         "directory": "/var/www/silverstripe.domain/logs",
         "filename": "silverstripe.domain.deployment.log"
+    },
+    "services": {
+        "bower": true,
+        "composer": true
     }
 }

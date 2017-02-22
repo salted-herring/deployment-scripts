@@ -76,6 +76,10 @@ The options that are passed into the CLI, may also be provided by an optional is
         "mode": 1,
         "branch": "master",
         "theme": "default"
+    },
+    "services": {
+        "bower": true,
+        "composer": true
     }
 }
 ```

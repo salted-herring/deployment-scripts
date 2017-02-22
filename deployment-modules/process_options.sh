@@ -7,6 +7,8 @@
 
 # Defaults
 APACHE_VERSION=2.4
+BOWER=true
+COMPOSER=true
 DEFAULT_BRANCH="master"
 DEFAULT_MODE="lite"
 DEFAULT_THEME="default"
@@ -31,6 +33,8 @@ then
     root_config=$(cat $CHOSEN_CONFIG | jq '. | .root' | tr -d '"')
     env_config=$(cat $CHOSEN_CONFIG | jq '. | .environment' | tr -d '"')
     apache_config=$(cat $CHOSEN_CONFIG | jq '. | .apache_version')
+    bower_config=$(cat $CHOSEN_CONFIG | jq '. | .services.bower')
+    composer_config=$(cat $CHOSEN_CONFIG | jq '. | .services.composer')
     default_branch_config=$(cat $CHOSEN_CONFIG | jq '. | .default.branch' | tr -d '"')
     default_mode_config=$(cat $CHOSEN_CONFIG | jq '. | .default.mode')
     default_theme_config=$(cat $CHOSEN_CONFIG | jq '. | .default.theme' | tr -d '"')
@@ -53,6 +57,8 @@ then
     SITE_ROOT="$root_config"
     ENV="$env_config"
     APACHE_VERSION="$apache_config"
+    BOWER="$bower_config"
+    COMPOSER="$composer_config"
     DEFAULT_BRANCH="$default_branch_config"
     DEFAULT_MODE="$default_mode_config"
     DEFAULT_THEME="$default_theme_config"

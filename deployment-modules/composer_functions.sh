@@ -13,7 +13,8 @@
 function composer_update() {
     COMPOSER_SUCCESS=true
 
-    if [ "$MODE" == "full" ]; then
+    if [ "$MODE" == "full" ] && [ "$COMPOSER" = true ]
+    then
         log_message false "Updating Composer (please be patient - this may take some time)..." "$MESSAGE_INFO";
 
         if [ "$VERBOSE" = true ]
