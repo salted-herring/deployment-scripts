@@ -61,15 +61,54 @@ USAGE:
 
 ./deployscript.sh [options]
 
-  -S Site Root       - Path to the root (parent of the public directory) of the site.
-  -v Verbose         - log all output
-  -m Mode            - indicates whether we run bower & composer - 1 for "Lite" mode; 2 for "Full" mode
-  -b Branch          - the branch to deploy from
-  -e Environment     - The SilverStripe environment (e.g. "dev" or "live")
-  -h Help            - Display this help
-  -i Non-interactive - Allow script to execute without waiting at each step.
-  -t Theme           - Theme to use when running bower
-  -c Config          - json file with default settings
+  -v Verbose            - log all output
+  -h Help               - Display this help
+  -i Non-interactive    - Allow script to execute without waiting at each step.
+  -c Config             - json file with default settings
+
+ -------
+ CONFIG:
+
+ The json config file should look like so:
+
+ {
+     "apache_version": 2.4,
+     "environment": "dev",
+     "interactive": "true",
+     "verbose": false,
+     "root": "/var/www/silverstripe.domain/",
+     "mysql": {
+         "host": "localhost",
+         "database_name": "ss_deployment",
+         "username": "silverstripe",
+         "password": "password"
+     },
+     "paths": {
+         "htdocs": "htdocs",
+         "versions": "versions",
+         "repo": "repo",
+         "sql_dumps": "sql-dumps",
+         "themes": "themes"
+     },
+     "default": {
+         "mode": 1,
+         "theme": "default"
+     },
+     "logging": {
+         "enabled": true,
+         "directory": "/var/www/silverstripe.domain/logs",
+         "filename": "silverstripe.domain.deployment.log"
+     },
+     "services": {
+         "bower": true,
+         "composer": true
+     },
+     "repository": {
+         "mode": "branch",
+         "target": "master"
+     }
+ }
+
 
 END
 
@@ -82,31 +121,36 @@ readonly LOGGING_DATE=$(date "+%d-%m-%Y %H:%m:%S")
 readonly SCRIPT_PATH="$(dirname "$(readlink -f "$0")")"
 readonly DATABASE_VERSION=$(date "+%Y-%m-%d-%H_%M_%S")
 
+# shellcheck source=deployment-modules/logging.sh
+source "$SCRIPT_PATH"/deployment-modules/logging.sh
+
 INTERACTIVE=true
 VERBOSE=false
 
 CHOSEN_MODE=0
-CHOSEN_BRANCH=0
+CHOSEN_REPO_MODE=0
+CHOSEN_REPO_TARGET=0
 CHOSEN_THEME=false
 CHOSEN_ENV=false
 CHOSEN_CONFIG=false
 CHOSEN_SITE_ROOT=false
 
-while getopts ic:vm:e:t:b:h: option
+while getopts ic:vh option
 do
     case "${option}"
     in
-        S) CHOSEN_SITE_ROOT=${OPTARG};;
         c) CHOSEN_CONFIG=${OPTARG};;
         v) VERBOSE=true;;
-        m) CHOSEN_MODE=${OPTARG};;
-        e) CHOSEN_ENV=${OPTARG};;
-        t) CHOSEN_THEME=${OPTARG};;
-        b) CHOSEN_BRANCH=${OPTARG};;
         i) INTERACTIVE=false;;
         h) echo -e "$USAGE \n"; exit;;
     esac
 done
+
+if [ "$CHOSEN_CONFIG" = false ]
+then
+    log_message true "You need to supply a vlid configuration file via the -c flag" "$MESSAGE_ERROR"
+    exit
+fi
 
 
 
@@ -155,9 +199,6 @@ source "$SCRIPT_PATH"/deployment-modules/composer_functions.sh
 
 # shellcheck source=deployment-modules/git_functions.sh
 source "$SCRIPT_PATH"/deployment-modules/git_functions.sh
-
-# shellcheck source=deployment-modules/logging.sh
-source "$SCRIPT_PATH"/deployment-modules/logging.sh
 
 # shellcheck source=deployment-modules/maintenance_functions.sh
 source "$SCRIPT_PATH"/deployment-modules/maintenance_functions.sh
@@ -219,33 +260,7 @@ else
     esac
 fi
 
-
-if [ "$CHOSEN_BRANCH" = 0 ]
-then
-    echo -e "\n"
-    echo -e "Which branch should we deploy from?: \e[1m[$DEFAULT_BRANCH]\e[22m "
-    read branch
-else
-    branch=$CHOSEN_BRANCH
-fi
-
-
-# check branch exists
-cd "$SITE_ROOT/$REPO_DIR" || exit
-if ! (git rev-parse --verify "$branch" &>/dev/null)
-then
-    log_message true "Can't find the $branch branch in the current repository. You may want to perform a git fetch before running this again." "$MESSAGE_ERROR";
-    exit
-fi
-
-
-
-if [[ -z "$branch" ]]; then
-   echo -e "   • Deployment branch: \e[1m$DEFAULT_BRANCH\e[22m"
-   branch=$DEFAULT_BRANCH
-else
-   echo -e "   • Deployment branch: \e[1m$branch\e[22m"
-fi
+get_git_target
 
 #
 # Check the chosen environment.
@@ -300,7 +315,7 @@ echo -e "\e[39m--------------------------------------"
 #
 # 1. Git fetch
 # ------------
-git_fetch "$branch"
+git_fetch "$CHOSEN_REPO_MODE" "$CHOSEN_REPO_TARGET"
 interactive
 
 #

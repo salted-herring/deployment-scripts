@@ -10,8 +10,11 @@ APACHE_VERSION=2.4
 BOWER=true
 COMPOSER=true
 DEFAULT_BRANCH="master"
+DEFAULT_TAG="stable"
 DEFAULT_MODE="lite"
 DEFAULT_THEME="default"
+DEFAULT_REPO_MODE="branch"
+DEFAULT_REPO_TARGET="master"
 ENV="dev"
 HTDOCS_DIR="htdocs"
 MYSQL_HOST="localhost"
@@ -53,6 +56,9 @@ then
     logging_dir=$(cat $CHOSEN_CONFIG | jq '. | .logging.directory' | tr -d '"')
     logging_filename=$(cat $CHOSEN_CONFIG | jq '. | .logging.filename' | tr -d '"')
 
+    repository_mode=$(cat $CHOSEN_CONFIG | jq '. | .repository.mode' | tr -d '"')
+    repository_target=$(cat $CHOSEN_CONFIG | jq '. | .repository.target' | tr -d '"')
+
     # then assign to the parameters
     SITE_ROOT="$root_config"
     ENV="$env_config"
@@ -77,11 +83,17 @@ then
     LOGGING_DIRECTORY="$logging_dir"
     LOGGING_FILENAME="$logging_filename"
 
+    DEFAULT_REPO_MODE="$repository_mode"
+    DEFAULT_REPO_TARGET="$repository_target"
+
     # Override cli arguments
     CHOSEN_MODE="$default_mode_config"
-    CHOSEN_BRANCH="$default_branch_config"
+    # CHOSEN_BRANCH="$default_branch_config"
     CHOSEN_ENV="$env_config"
     CHOSEN_THEME="$default_theme_config"
+
+    CHOSEN_REPO_MODE="$repository_mode"
+    CHOSEN_REPO_TARGET="$repository_target"
 
 
     # logging

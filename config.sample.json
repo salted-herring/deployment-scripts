@@ -19,7 +19,6 @@
     },
     "default": {
         "mode": 1,
-        "branch": "master",
         "theme": "default"
     },
     "logging": {
@@ -30,5 +29,9 @@
     "services": {
         "bower": true,
         "composer": true
+    },
+    "repository": {
+        "mode": "branch",
+        "target": "master"
     }
 }
