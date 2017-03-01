@@ -28,11 +28,15 @@ VERSIONS_DIR="versions"
 LOGGING_ENABLED=false
 LOGGING_DIRECTORY="."
 LOGGING_FILENAME="silverstripe.domain.deployment.log"
+ARCHIVE_SCHEME="files"
+ARCHIVE_LIMIT=8
 
 # If a config file is passed in, override the arguments
 if [ ! "$CHOSEN_CONFIG" = false ]
 then
     # first, extract the config values
+    archive_scheme=$(cat $CHOSEN_CONFIG | jq '. | .archiving.scheme' | tr -d '"')
+    archive_limit=$(cat $CHOSEN_CONFIG | jq '. | .archiving.limit' | tr -d '"')
     root_config=$(cat $CHOSEN_CONFIG | jq '. | .root' | tr -d '"')
     env_config=$(cat $CHOSEN_CONFIG | jq '. | .environment' | tr -d '"')
     apache_config=$(cat $CHOSEN_CONFIG | jq '. | .apache_version')
@@ -60,6 +64,8 @@ then
     repository_target=$(cat $CHOSEN_CONFIG | jq '. | .repository.target' | tr -d '"')
 
     # then assign to the parameters
+    ARCHIVE_SCHEME="$archive_scheme"
+    ARCHIVE_LIMIT="$archive_limit"
     SITE_ROOT="$root_config"
     ENV="$env_config"
     APACHE_VERSION="$apache_config"
@@ -86,15 +92,12 @@ then
     DEFAULT_REPO_MODE="$repository_mode"
     DEFAULT_REPO_TARGET="$repository_target"
 
-    # Override cli arguments
+    # Override chosen arguments
     CHOSEN_MODE="$default_mode_config"
-    # CHOSEN_BRANCH="$default_branch_config"
     CHOSEN_ENV="$env_config"
     CHOSEN_THEME="$default_theme_config"
-
     CHOSEN_REPO_MODE="$repository_mode"
     CHOSEN_REPO_TARGET="$repository_target"
-
 
     # logging
     if [ "$LOGGING_ENABLED" = true ]

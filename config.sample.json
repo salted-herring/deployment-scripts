@@ -26,6 +26,10 @@
         "directory": "/var/www/silverstripe.domain/logs",
         "filename": "silverstripe.domain.deployment.log"
     },
+    "archiving": {
+        "scheme": "files",
+        "limit": "4"
+    },
     "services": {
         "bower": true,
         "composer": true
