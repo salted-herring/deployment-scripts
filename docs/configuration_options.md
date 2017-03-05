@@ -142,6 +142,7 @@ Any services beyond repository syncing, database backup & archiving are listed h
 Details target for deployment. It is assumed that the **repo** path (as found in paths -> repo) has been initialised to an active git repository & the user has at least fetch & pull access.
 
 | option | description |
+| --- | --- |
 |  **mode** | `“branch”` or `“tag”` |
 |  **target** | `branch or tag name` |
 
