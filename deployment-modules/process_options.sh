@@ -37,7 +37,7 @@ then
     # first, extract the config values
     archive_scheme=$(cat $CHOSEN_CONFIG | jq '. | .archiving.scheme' | tr -d '"')
     archive_limit=$(cat $CHOSEN_CONFIG | jq '. | .archiving.limit' | tr -d '"')
-    root_config=$(cat $CHOSEN_CONFIG | jq '. | .root' | tr -d '"')
+    root_config=$(cat $CHOSEN_CONFIG | jq '. | .paths.root' | tr -d '"')
     env_config=$(cat $CHOSEN_CONFIG | jq '. | .environment' | tr -d '"')
     apache_config=$(cat $CHOSEN_CONFIG | jq '. | .apache_version')
     bower_config=$(cat $CHOSEN_CONFIG | jq '. | .services.bower')

@@ -3,7 +3,6 @@
     "environment": "dev",
     "interactive": "true",
     "verbose": false,
-    "root": "/var/www/silverstripe.domain/",
     "mysql": {
         "host": "localhost",
         "database_name": "ss_deployment",
@@ -11,6 +10,7 @@
         "password": "password"
     },
     "paths": {
+        "root": "/var/www/silverstripe.domain/",
         "htdocs": "htdocs",
         "versions": "versions",
         "repo": "repo",
