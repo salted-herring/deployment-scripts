@@ -75,6 +75,7 @@ Enable/disable verbose logging.
 Database connection details:
 
 | option | description |
+| --- | --- |
 | **host** | host name |
 |  **database_name** | database name |
 | **username** | database user name |
@@ -84,6 +85,7 @@ Database connection details:
 Required path variables:
 
 | option | description |
+| --- | --- |
 | **root** | Base path to the installation. If we’re running apache the path would be `/var/www/hostname`, not `/var/www/hostname/public` |
 |  **htdocs** | Name of the public files directory within *root* |
 | **versions** | Name of the archived files directory within *root* |
@@ -95,6 +97,7 @@ Required path variables:
 Some generic setup options:
 
 | option | description |
+| --- | --- |
 |  **mode** | 1 or 2 |
 |  **theme** | The name of the theme we are using |
 
@@ -108,6 +111,7 @@ The mode has 2 options:
 Options for logging:
 
 | option | description |
+| --- | --- |
 |  **enabled** | boolean |
 |  **directory** | Absolute path to log directory |
 |  **filename** | Name of log file within directory |
@@ -116,6 +120,7 @@ Options for logging:
 Options for archiving:
 
 | option | description |
+| --- | --- |
 |  **scheme** | `“size”` or `“files”` |
 |  **limit** | `int` |
 
